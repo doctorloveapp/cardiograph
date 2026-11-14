@@ -8,16 +8,11 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Matrix
 import android.hardware.camera2.CameraCharacteristics
-import android.hardware.camera2.CameraCaptureSession
-import android.hardware.camera2.CaptureRequest
-import android.hardware.camera2.CaptureResult
-import android.hardware.camera2.TotalCaptureResult
 import android.net.Uri
 import android.os.SystemClock
 import android.provider.Settings
 import android.view.View
 import androidx.camera.camera2.interop.Camera2CameraInfo
-import androidx.camera.camera2.interop.Camera2Interop
 import androidx.camera.camera2.interop.ExperimentalCamera2Interop
 import androidx.camera.core.*
 import androidx.camera.lifecycle.ProcessCameraProvider
@@ -32,7 +27,6 @@ import java.io.File
 import java.util.TimeZone
 import java.util.UUID
 import java.util.concurrent.Executors
-import java.util.concurrent.TimeUnit
 import kotlin.math.abs
 
 /** One lifecycle-bound CameraX owner. No second camera stream supplies the timestamp. */
@@ -50,7 +44,6 @@ class CameraBridge(private val activity: MainActivity, engine: FlutterEngine) {
     private var pendingCapture: MethodChannel.Result? = null
     private var generation = 0
     private var timestampSource: Int? = null
-    @Volatile private var observedContinuous = false
 
     init {
         // Crash leftovers belong exclusively to this dedicated private directory.
@@ -63,11 +56,10 @@ class CameraBridge(private val activity: MainActivity, engine: FlutterEngine) {
                         scaleType = PreviewView.ScaleType.FILL_CENTER
                         setOnTouchListener { _, event ->
                             if (event.action == android.view.MotionEvent.ACTION_UP) {
-                                val x = (event.x / width).toDouble().coerceIn(0.0, 1.0)
-                                val y = (event.y / height).toDouble().coerceIn(0.0, 1.0)
-                                channel.invokeMethod("focusFeedback", mapOf("x" to x, "y" to y, "pending" to true))
-                                focus(x, y) { payload -> channel.invokeMethod("focusFeedback", payload + mapOf("x" to x, "y" to y)) }
-
+                                camera?.cameraControl?.startFocusAndMetering(
+                                    FocusMeteringAction.Builder(
+                                        meteringPointFactory.createPoint(event.x, event.y),
+                                        FocusMeteringAction.FLAG_AF).build())
                             }
                             true
                         }
@@ -95,7 +87,6 @@ class CameraBridge(private val activity: MainActivity, engine: FlutterEngine) {
                     Uri.parse("package:${activity.packageName}"))); result.success(null) }
                 "start" -> start(result)
                 "capture" -> takePicture(result)
-                "focus" -> focus(call.argument<Double>("x") ?: .5, call.argument<Double>("y") ?: .5) { result.success(it) }
                 "torch" -> {
                     val cam = camera
                     if (cam == null || !cam.cameraInfo.hasFlashUnit()) result.success(false)
@@ -139,16 +130,7 @@ class CameraBridge(private val activity: MainActivity, engine: FlutterEngine) {
                 val rotation = view.display.rotation
                 val imageCapture = ImageCapture.Builder().setTargetRotation(rotation)
                     .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY).build()
-                observedContinuous = false
-                val liveBuilder = Preview.Builder().setTargetRotation(rotation)
-                // Observe, do not override AF_MODE via interop: an override would defeat
-                // CameraX's temporary AUTO mode during startFocusAndMetering.
-                Camera2Interop.Extender(liveBuilder).setSessionCaptureCallback(object : CameraCaptureSession.CaptureCallback() {
-                    override fun onCaptureCompleted(session: CameraCaptureSession, request: CaptureRequest, result: TotalCaptureResult) {
-                        if (result.get(CaptureResult.CONTROL_AF_MODE) == CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE) observedContinuous = true
-                    }
-                })
-                val live = liveBuilder.build()
+                val live = Preview.Builder().setTargetRotation(rotation).build()
                 live.setSurfaceProvider(view.surfaceProvider)
                 val group = UseCaseGroup.Builder().setViewPort(view.viewPort!!)
                     .addUseCase(live).addUseCase(imageCapture).build()
@@ -163,23 +145,6 @@ class CameraBridge(private val activity: MainActivity, engine: FlutterEngine) {
                 result.success(mapOf("torch" to bound.cameraInfo.hasFlashUnit()))
             } catch (_: Exception) { result.error("CAMERA", "Fotocamera occupata o non disponibile", null) }
         }, main)
-    }
-
-    private fun focus(x: Double, y: Double, reply: (Map<String, Any>) -> Unit) {
-        val view = preview; val cam = camera
-        if (view == null || cam == null || !x.isFinite() || !y.isFinite() || x !in 0.0..1.0 || y !in 0.0..1.0) {
-            reply(mapOf("success" to false, "continuous" to observedContinuous)); return
-        }
-        try {
-            val point = view.meteringPointFactory.createPoint((x * view.width).toFloat(), (y * view.height).toFloat())
-            val action = FocusMeteringAction.Builder(point, FocusMeteringAction.FLAG_AF or FocusMeteringAction.FLAG_AE)
-                .setAutoCancelDuration(3, TimeUnit.SECONDS).build()
-            val future = cam.cameraControl.startFocusAndMetering(action)
-            future.addListener({
-                val success = try { future.get().isFocusSuccessful } catch (_: Exception) { false }
-                reply(mapOf("success" to success, "continuous" to observedContinuous))
-            }, main)
-        } catch (_: Exception) { reply(mapOf("success" to false, "continuous" to observedContinuous)) }
     }
 
     private fun takePicture(result: MethodChannel.Result) {

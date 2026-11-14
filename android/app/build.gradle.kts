@@ -47,6 +47,7 @@ android {
 }
 
 dependencies {
+    testImplementation("junit:junit:4.13.2")
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
     implementation("androidx.camera:camera-core:1.6.0")
     implementation("androidx.camera:camera-camera2:1.6.0")

@@ -59,7 +59,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.byTooltip('Impostazioni'));
     await tester.pumpAndSettle();
-    await tester.tap(find.byType(Switch));
+    await tester.tap(find.byType(Switch).first);
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
   });

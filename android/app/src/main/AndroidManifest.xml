@@ -15,6 +15,18 @@
         android:label="CardioGraph"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
+        <receiver android:name=".ReminderReceiver" android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+                <action android:name="android.intent.action.TIME_SET" />
+                <action android:name="android.intent.action.TIMEZONE_CHANGED" />
+                <action android:name="android.app.action.SCHEDULE_EXACT_ALARM_PERMISSION_STATE_CHANGED" />
+            </intent-filter>
+        </receiver>
+        <provider android:name="androidx.core.content.FileProvider" android:authorities="${applicationId}.reports" android:exported="false" android:grantUriPermissions="true">
+            <meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/report_paths" />
+        </provider>
         <activity
             android:name=".MainActivity"
             android:exported="true"

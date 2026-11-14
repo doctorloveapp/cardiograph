@@ -56,7 +56,7 @@ void main() {
         if (i == 0) expect(result.values, expected[0]);
         if (result.values.toString() == expected[i].toString()) exact++;
       }
-      expect(exact, greaterThanOrEqualTo(5));
+      expect(exact, 6);
     },
     skip: hasDataset
         ? false

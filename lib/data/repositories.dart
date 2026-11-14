@@ -44,6 +44,9 @@ class MeasurementRepository {
   MeasurementRepository(this.db);
   Future<List<Measurement>> list({CivilPeriod? period}) =>
       dao.list(period: period);
+  Future<List<Measurement>> snapshot(CivilPeriod period) => db.transaction(
+    () async => List<Measurement>.unmodifiable(await list(period: period)),
+  );
   Stream<List<Measurement>> watch({CivilPeriod? period}) =>
       watchQuery(() => list(period: period));
   Stream<T> watchQuery<T>(Future<T> Function() read) => Stream.multi((sink) {

@@ -94,7 +94,7 @@ class TimeBandBadge extends StatelessWidget {
 class PrimaryAction extends StatelessWidget {
   final String label;
   final IconData icon;
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
   const PrimaryAction({
     super.key,
     required this.label,

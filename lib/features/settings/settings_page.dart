@@ -1,3 +1,4 @@
+import '../reminders/reminders.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -36,21 +37,7 @@ class SettingsPage extends ConsumerWidget {
           ),
         ),
         const SizedBox(height: 20),
-        const GlassCard(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Backup e promemoria',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-              ),
-              SizedBox(height: 12),
-              Text(
-                'I controlli saranno disponibili insieme alle funzioni del diario. La protezione dei backup con password sarà facoltativa e disattivata inizialmente.',
-              ),
-            ],
-          ),
-        ),
+        const ReminderSettings(),
         const SizedBox(height: 24),
         const Text(
           'CardioGraph · 0.1.0-dev\nSviluppatore: Dan King\nUn diario personale, senza account.',

@@ -17,7 +17,6 @@ class CapturedImage {
   final int offsetMinutes;
   final bool precise;
   final int width, height;
-  final DisplayCrop? guideCrop;
   const CapturedImage(
     this.path,
     this.capturedAt, {
@@ -27,7 +26,6 @@ class CapturedImage {
     this.precise = false,
     this.width = 3,
     this.height = 4,
-    this.guideCrop,
   });
 }
 

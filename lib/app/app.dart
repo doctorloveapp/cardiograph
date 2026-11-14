@@ -1,3 +1,7 @@
+import 'dart:async';
+import 'package:flutter/services.dart';
+import '../features/reports/reports_page.dart';
+import '../features/reminders/reminders.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -34,18 +38,14 @@ GoRouter createRouter() => GoRouter(
         ),
         StatefulShellBranch(
           routes: [
-            GoRoute(
-              path: '/reports',
-              builder: (c, s) => const FeaturePage(
-                title: 'Report',
-                message:
-                    'Dopo aver registrato le letture potrai preparare il tuo riepilogo PDF.',
-                icon: Icons.description_outlined,
-              ),
-            ),
+            GoRoute(path: '/reports', builder: (c, s) => const ReportsPage()),
           ],
         ),
       ],
+    ),
+    GoRoute(
+      path: '/new-measurement',
+      builder: (c, s) => const NotificationMeasurementPage(),
     ),
     GoRoute(path: '/settings', builder: (c, s) => const SettingsPage()),
     GoRoute(path: '/capture', builder: (c, s) => const CameraPage()),
@@ -80,10 +80,63 @@ final routerProvider = Provider<GoRouter>((ref) {
   return router;
 });
 
-class CardioGraphApp extends ConsumerWidget {
+class CardioGraphApp extends ConsumerStatefulWidget {
   const CardioGraphApp({super.key});
   @override
-  Widget build(BuildContext context, WidgetRef ref) => MaterialApp.router(
+  ConsumerState<CardioGraphApp> createState() => _CardioGraphAppState();
+}
+
+class _CardioGraphAppState extends ConsumerState<CardioGraphApp>
+    with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    AndroidReminderScheduler.channel.setMethodCallHandler((call) async {
+      if (call.method == 'notificationTap') await _launch();
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) => unawaited(_launch()));
+  }
+
+  Future<void> _launch() async {
+    try {
+      final requested = await AndroidReminderScheduler.channel
+          .invokeMethod<bool>('takeLaunch');
+      if (requested == true && mounted) {
+        final router = ref.read(routerProvider);
+        if (router.routeInformationProvider.value.uri.path !=
+            '/new-measurement') {
+          router.push('/new-measurement');
+        }
+      }
+    } on MissingPluginException {
+      /* Desktop/widget tests have no Android platform. */
+    }
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) unawaited(_resume());
+  }
+
+  Future<void> _resume() async {
+    try {
+      await ref.read(reminderSchedulerProvider).reconcile();
+      await _launch();
+    } on MissingPluginException {
+      /* Android only. */
+    }
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    AndroidReminderScheduler.channel.setMethodCallHandler(null);
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => MaterialApp.router(
     title: 'CardioGraph',
     debugShowCheckedModeBanner: false,
     locale: const Locale('it', 'IT'),
@@ -91,5 +144,32 @@ class CardioGraphApp extends ConsumerWidget {
     localizationsDelegates: GlobalMaterialLocalizations.delegates,
     theme: appTheme(ref.watch(opaqueProvider)),
     routerConfig: ref.watch(routerProvider),
+  );
+}
+
+class NotificationMeasurementPage extends StatelessWidget {
+  const NotificationMeasurementPage({super.key});
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    appBar: AppBar(title: const Text('Nuova misurazione')),
+    body: Padding(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          FilledButton.icon(
+            onPressed: () => context.push('/capture'),
+            icon: const Icon(Icons.camera_alt_outlined),
+            label: const Text('Scatta foto'),
+          ),
+          const SizedBox(height: 16),
+          OutlinedButton.icon(
+            onPressed: () => context.push('/manual'),
+            icon: const Icon(Icons.edit_outlined),
+            label: const Text('Inserisci a mano'),
+          ),
+        ],
+      ),
+    ),
   );
 }

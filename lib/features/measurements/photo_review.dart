@@ -52,10 +52,7 @@ class _PhotoReviewPageState extends ConsumerState<PhotoReviewPage> {
       MaterialPageRoute(
         builder: (_) => CropPage(
           widget.photo,
-          initial:
-              _candidate?.display?.crop ??
-              widget.photo.guideCrop ??
-              DisplayCrop.full,
+          initial: _candidate?.display?.crop ?? DisplayCrop.full,
         ),
       ),
     );

@@ -3,14 +3,12 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:drift/native.dart';
-import 'package:image/image.dart' as im;
 import 'package:fl_chart/fl_chart.dart';
 import 'package:timezone/data/latest.dart' as tzdata;
 import 'package:cardiograph/app/app.dart';
 import 'package:cardiograph/app/providers.dart';
 import 'package:cardiograph/core/services/contracts.dart';
 import 'package:cardiograph/core/services/photo_services.dart';
-import 'package:cardiograph/core/vision/seven_segment.dart';
 import 'package:cardiograph/core/vision/camera_guide.dart';
 import 'package:cardiograph/core/time/measurement_time.dart';
 import 'package:cardiograph/core/design_system/theme.dart';
@@ -157,35 +155,15 @@ void main() {
       }
     },
   );
-  test('Cornice -30% centrata e ritaglio sul medesimo viewport', () {
-    expect(CameraGuide.fraction, closeTo(.76 * .7, 1e-12));
-    expect(CameraGuide.crop.left, closeTo(.234, 1e-12));
-    expect(CameraGuide.crop.top, CameraGuide.crop.left);
-    expect(CameraGuide.crop.right, closeTo(.766, 1e-12));
-    final image = im.Image(width: 100, height: 200);
-    for (var y = 0; y < 200; y++) {
-      for (var x = 0; x < 100; x++) {
-        image.setPixelRgb(x, y, y, y, y);
-      }
-    }
-    final result = decodeDisplay(
-      Uint8List.fromList(im.encodePng(image)),
-      crop: CameraGuide.crop,
-    );
-    final preview = im.decodeImage(result.preview)!;
-    expect(preview.width, 53);
-    expect(preview.height, 106);
-    expect(preview.getPixel(0, 0).r, closeTo(46, 3));
+  test('Cornice originale Fase 4, guida solo visiva', () {
+    expect(CameraGuide.fraction, .76);
   });
-  test('Bridge trasmette la nuova cornice e conserva il timestamp', () async {
+  test('Bridge senza ROI imposta e timestamp dello scatto invariato', () async {
     const channel = MethodChannel('dev.danking.cardiograph/camera');
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(channel, (call) async {
           expect(call.method, 'capture');
-          expect(
-            (call.arguments as Map)['guideFraction'],
-            CameraGuide.fraction,
-          );
+          expect(call.arguments, isNull);
           return {
             'path': 'frame_test.jpg',
             'capturedAt': 123456789,
@@ -199,7 +177,6 @@ void main() {
         });
     final service = NativeCaptureService();
     final photo = await service.capture();
-    expect(photo.guideCrop, CameraGuide.crop);
     expect(photo.capturedAt.millisecondsSinceEpoch, 123456789);
     service.dispose();
   });

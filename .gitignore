@@ -18,7 +18,7 @@ lcov.info
 coverage.json
 *.lcov
 test-results/
-reports/
+/reports/
 benchmark_reports/
 *.profdata
 *.physics-profile.json

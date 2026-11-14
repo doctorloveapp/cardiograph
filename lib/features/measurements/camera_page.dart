@@ -17,11 +17,6 @@ class _CameraPageState extends ConsumerState<CameraPage>
     with WidgetsBindingObserver {
   late final NativeCaptureService _service;
   StreamSubscription<String>? _subscription;
-  StreamSubscription<Map<String, dynamic>>? _focusSubscription;
-  Timer? _focusTimer;
-  Offset? _focusPoint;
-  String _focusLabel = "";
-  bool? _focusSuccess;
   String? _permission, _error;
   bool _ready = false,
       _busy = false,
@@ -49,25 +44,6 @@ class _CameraPageState extends ConsumerState<CameraPage>
           _ready = false;
         });
       }
-    });
-    _focusSubscription = _service.focusFeedback.listen((event) {
-      if (!mounted || _reviewing) return;
-      _focusTimer?.cancel();
-      setState(() {
-        _focusPoint = Offset(
-          (event['x'] as num).toDouble(),
-          (event['y'] as num).toDouble(),
-        );
-        _focusSuccess = event['pending'] == true
-            ? null
-            : event['success'] == true;
-        _focusLabel = event['pending'] == true
-            ? 'Messa a fuoco in corso'
-            : '${event['success'] == true ? 'Messa a fuoco confermata' : 'Messa a fuoco non confermata'}.${event['continuous'] == true ? ' Autofocus continuo attivo.' : ''}';
-      });
-      _focusTimer = Timer(const Duration(milliseconds: 1400), () {
-        if (mounted) setState(() => _focusPoint = null);
-      });
     });
     _checkPermission(true);
   }
@@ -189,8 +165,6 @@ class _CameraPageState extends ConsumerState<CameraPage>
     WidgetsBinding.instance.removeObserver(this);
     unawaited(SystemChrome.setPreferredOrientations(const []));
     _subscription?.cancel();
-    _focusSubscription?.cancel();
-    _focusTimer?.cancel();
     unawaited(_service.close());
     // The provider is read before dispose so cleanup never depends on an invalid Ref.
     final owned = _owned;
@@ -226,7 +200,7 @@ class _CameraPageState extends ConsumerState<CameraPage>
           Expanded(
             child: _permission == 'granted'
                 ? LayoutBuilder(
-                    builder: (context, previewBox) => Stack(
+                    builder: (context, _) => Stack(
                       fit: StackFit.expand,
                       children: [
                         AndroidView(
@@ -282,40 +256,6 @@ class _CameraPageState extends ConsumerState<CameraPage>
                             ),
                           ),
                         ),
-                        if (_focusLabel.isNotEmpty)
-                          Positioned(
-                            left: 0,
-                            top: 0,
-                            child: Semantics(
-                              label: _focusLabel,
-                              liveRegion: true,
-                              child: const SizedBox(width: 1, height: 1),
-                            ),
-                          ),
-                        if (_focusPoint != null)
-                          Positioned(
-                            left: _focusPoint!.dx * previewBox.maxWidth - 26,
-                            top: _focusPoint!.dy * previewBox.maxHeight - 26,
-                            child: IgnorePointer(
-                              child: Semantics(
-                                label: _focusLabel,
-                                liveRegion: true,
-                                child: Container(
-                                  width: 52,
-                                  height: 52,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    border: Border.all(
-                                      width: 2,
-                                      color: _focusSuccess == false
-                                          ? Colors.white54
-                                          : Colors.white,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
                         if (_error != null)
                           ColoredBox(
                             color: Colors.black87,

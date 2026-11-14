@@ -6,28 +6,21 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
 import '../vision/seven_segment.dart';
 import 'contracts.dart';
-import '../vision/camera_guide.dart';
 
 class NativeCaptureService implements CaptureService {
   static const channel = MethodChannel('dev.danking.cardiograph/camera');
   final _errors = StreamController<String>.broadcast();
-  final _focus = StreamController<Map<String, dynamic>>.broadcast();
   NativeCaptureService() {
     channel.setMethodCallHandler((call) async {
-      if (call.method == 'focusFeedback' && !_focus.isClosed) {
-        _focus.add(Map<String, dynamic>.from(call.arguments as Map));
-      }
       if (call.method == 'cameraError' && !_errors.isClosed) {
         _errors.add(call.arguments as String);
       }
     });
   }
   Stream<String> get errors => _errors.stream;
-  Stream<Map<String, dynamic>> get focusFeedback => _focus.stream;
   void dispose() {
     channel.setMethodCallHandler(null);
     unawaited(_errors.close());
-    unawaited(_focus.close());
   }
 
   Future<String> permission({bool request = false}) async =>
@@ -43,18 +36,10 @@ class NativeCaptureService implements CaptureService {
 
   Future<bool> torch(bool value) async =>
       await channel.invokeMethod<bool>('torch', {'enabled': value}) ?? false;
-  Future<Map<String, dynamic>> focus(double x, double y) async =>
-      await channel.invokeMapMethod<String, dynamic>('focus', {
-        'x': x,
-        'y': y,
-      }) ??
-      {};
   Future<void> close() => channel.invokeMethod('close');
   @override
   Future<CapturedImage> capture() async {
-    final m = (await channel.invokeMapMethod<String, dynamic>('capture', {
-      'guideFraction': CameraGuide.fraction,
-    }))!;
+    final m = (await channel.invokeMapMethod<String, dynamic>('capture'))!;
     return CapturedImage(
       m['path'] as String,
       DateTime.fromMillisecondsSinceEpoch(m['capturedAt'] as int, isUtc: true),
@@ -64,7 +49,6 @@ class NativeCaptureService implements CaptureService {
       timestampSource: m['source'] as String,
       width: m['width'] as int,
       height: m['height'] as int,
-      guideCrop: CameraGuide.crop,
     );
   }
 }
@@ -78,10 +62,7 @@ class SevenSegmentOcrService implements OcrService {
     CapturedImage image, {
     DisplayCrop? crop,
   }) async {
-    final display = await compute(_decodePhoto, (
-      image.path,
-      crop ?? image.guideCrop,
-    ));
+    final display = await compute(_decodePhoto, (image.path, crop));
     return OcrCandidate(
       systolic: display.values[0],
       diastolic: display.values[1],
