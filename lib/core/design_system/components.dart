@@ -2,6 +2,44 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'theme.dart';
 
+class GlassDialog extends AlertDialog {
+  const GlassDialog({super.key, super.title, super.content, super.actions});
+  @override
+  Widget build(BuildContext context) {
+    final opaque =
+        Theme.of(context).extension<SurfaceStyle>()!.opaque ||
+        MediaQuery.of(context).accessibleNavigation;
+    return BackdropFilter(
+      filter: ImageFilter.blur(
+        sigmaX: opaque ? 0 : Brand.blur,
+        sigmaY: opaque ? 0 : Brand.blur,
+      ),
+      child: super.build(context),
+    );
+  }
+}
+
+class GlassSheet extends StatelessWidget {
+  final Widget child;
+  const GlassSheet({super.key, required this.child});
+  @override
+  Widget build(BuildContext context) {
+    final opaque =
+        Theme.of(context).extension<SurfaceStyle>()!.opaque ||
+        MediaQuery.of(context).accessibleNavigation;
+    return ClipRRect(
+      borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(
+          sigmaX: opaque ? 0 : Brand.blur,
+          sigmaY: opaque ? 0 : Brand.blur,
+        ),
+        child: child,
+      ),
+    );
+  }
+}
+
 class GlassCard extends StatelessWidget {
   final Widget child;
   const GlassCard({super.key, required this.child});
@@ -10,24 +48,122 @@ class GlassCard extends StatelessWidget {
     final opaque =
         Theme.of(context).extension<SurfaceStyle>()!.opaque ||
         MediaQuery.of(context).accessibleNavigation;
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(Brand.cardRadius),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(
-          sigmaX: opaque ? 0 : Brand.blur,
-          sigmaY: opaque ? 0 : Brand.blur,
-        ),
-        child: Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(24),
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: opaque ? 1 : .92),
-            borderRadius: BorderRadius.circular(Brand.cardRadius),
-            border: Border.all(
-              color: opaque ? Brand.navy.withValues(alpha: .25) : Colors.white,
-            ),
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(Brand.cardRadius),
+        boxShadow: [
+          BoxShadow(
+            color: Brand.navy.withValues(alpha: opaque ? .08 : .14),
+            blurRadius: 24,
+            offset: const Offset(5, 10),
           ),
-          child: child,
+          const BoxShadow(
+            color: Colors.white,
+            blurRadius: 5,
+            offset: Offset(-2, -3),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(Brand.cardRadius),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(
+            sigmaX: opaque ? 0 : Brand.blur,
+            sigmaY: opaque ? 0 : Brand.blur,
+          ),
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: opaque ? Colors.white : null,
+              gradient: opaque
+                  ? null
+                  : LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        Colors.white.withValues(alpha: .93),
+                        Colors.white.withValues(alpha: .72),
+                      ],
+                    ),
+              borderRadius: BorderRadius.circular(Brand.cardRadius),
+              border: Border.all(
+                color: opaque
+                    ? Brand.navy.withValues(alpha: .25)
+                    : Colors.white,
+              ),
+            ),
+            child: child,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// The colored light lives below the glass, including full-screen routes.
+class GlassBackdrop extends StatelessWidget {
+  final Widget child;
+  const GlassBackdrop({super.key, required this.child});
+  @override
+  Widget build(BuildContext context) => DecoratedBox(
+    decoration: const BoxDecoration(
+      gradient: LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [
+          Color(0xffcceafb),
+          Brand.canvas,
+          Color(0xffd7f4ed),
+          Color(0xffd9eafb),
+        ],
+        stops: [0, .4, .73, 1],
+      ),
+    ),
+    child: child,
+  );
+}
+
+class GlassNavigationSurface extends StatelessWidget {
+  final Widget child;
+  const GlassNavigationSurface({super.key, required this.child});
+  @override
+  Widget build(BuildContext context) {
+    final opaque =
+        Theme.of(context).extension<SurfaceStyle>()!.opaque ||
+        MediaQuery.of(context).accessibleNavigation;
+    return Container(
+      decoration: BoxDecoration(
+        boxShadow: [
+          BoxShadow(
+            color: Brand.navy.withValues(alpha: .15),
+            blurRadius: 24,
+            offset: const Offset(0, -5),
+          ),
+        ],
+      ),
+      child: ClipRect(
+        child: BackdropFilter(
+          filter: ImageFilter.blur(
+            sigmaX: opaque ? 0 : Brand.blur,
+            sigmaY: opaque ? 0 : Brand.blur,
+          ),
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: opaque
+                    ? [const Color(0xffcce6f6), const Color(0xffdceefa)]
+                    : [
+                        Brand.sky.withValues(alpha: .40),
+                        const Color(0xffd5eafa).withValues(alpha: .94),
+                      ],
+              ),
+              border: const Border(
+                top: BorderSide(color: Colors.white, width: 2),
+              ),
+            ),
+            child: child,
+          ),
         ),
       ),
     );

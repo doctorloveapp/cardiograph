@@ -1,3 +1,6 @@
+import '../features/backup/backup_service.dart';
+import '../features/backup/backup_settings.dart';
+import '../core/design_system/components.dart';
 import 'dart:async';
 import 'package:flutter/services.dart';
 import '../features/reports/reports_page.dart';
@@ -95,7 +98,23 @@ class _CardioGraphAppState extends ConsumerState<CardioGraphApp>
     AndroidReminderScheduler.channel.setMethodCallHandler((call) async {
       if (call.method == 'notificationTap') await _launch();
     });
-    WidgetsBinding.instance.addPostFrameCallback((_) => unawaited(_launch()));
+    WidgetsBinding.instance.addPostFrameCallback((_) => unawaited(_startup()));
+  }
+
+  Future<void> _startup() async {
+    await _launch();
+    await _recoverPending();
+  }
+
+  Future<void> _recoverPending() async {
+    try {
+      final service = await ref.read(backupServiceProvider.future);
+      if (!mounted) return;
+      final done = await service.recover();
+      if (mounted) ref.read(recoveryWarningProvider.notifier).set(!done);
+    } catch (_) {
+      if (mounted) ref.read(recoveryWarningProvider.notifier).set(true);
+    }
   }
 
   Future<void> _launch() async {
@@ -123,6 +142,7 @@ class _CardioGraphAppState extends ConsumerState<CardioGraphApp>
     try {
       await ref.read(reminderSchedulerProvider).reconcile();
       await _launch();
+      await _recoverPending();
     } on MissingPluginException {
       /* Android only. */
     }
@@ -137,6 +157,7 @@ class _CardioGraphAppState extends ConsumerState<CardioGraphApp>
 
   @override
   Widget build(BuildContext context) => MaterialApp.router(
+    builder: (context, child) => GlassBackdrop(child: child!),
     title: 'CardioGraph',
     debugShowCheckedModeBanner: false,
     locale: const Locale('it', 'IT'),

@@ -5,6 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/design_system/components.dart';
 import '../../core/services/contracts.dart';
 import '../../core/services/platform_services.dart';
+import '../../data/providers.dart';
+import '../backup/backup_service.dart';
 
 class ReminderStatus {
   final bool allowed, exact;
@@ -115,102 +117,113 @@ class _ReminderSettingsState extends ConsumerState<ReminderSettings>
   }
 
   @override
-  Widget build(BuildContext context) => GlassCard(
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Text(
-          'Promemoria giornalieri',
-          style: Theme.of(context).textTheme.titleLarge,
-        ),
-        const SizedBox(height: 8),
-        const Text(
-          'Orari locali fissi. Restano attivi anche dopo una misurazione.',
-        ),
-        for (final (i, id, hour, name) in [
-          (0, 1000, '10:00', 'Mattina'),
-          (1, 1600, '16:00', 'Pomeriggio'),
-          (2, 2100, '21:00', 'Sera'),
-        ])
-          SwitchListTile(
-            contentPadding: EdgeInsets.zero,
-            key: ValueKey('reminder-$id'),
-            title: Text('$name · $hour'),
-            subtitle: _status != null && _status!.slots[i]['enabled'] == true
-                ? Text(
-                    _status!.allowed
-                        ? 'Prossimo: ${_next(_status!.slots[i]['next'] as String)}'
-                        : 'Attivo, notifiche bloccate da Android',
-                  )
-                : null,
-            value: _status?.slots[i]['enabled'] == true,
-            onChanged: _busy || _status == null
+  Widget build(BuildContext context) {
+    ref.listen(appSettingsProvider, (previous, next) {
+      if (next.hasValue) unawaited(_refresh());
+    });
+    return GlassCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            'Promemoria giornalieri',
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'Orari locali fissi. Restano attivi anche dopo una misurazione.',
+          ),
+          for (final (i, id, hour, name) in [
+            (0, 1000, '10:00', 'Mattina'),
+            (1, 1600, '16:00', 'Pomeriggio'),
+            (2, 2100, '21:00', 'Sera'),
+          ])
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              key: ValueKey('reminder-$id'),
+              title: Text('$name · $hour'),
+              subtitle: _status != null && _status!.slots[i]['enabled'] == true
+                  ? Text(
+                      _status!.allowed
+                          ? 'Prossimo: ${_next(_status!.slots[i]['next'] as String)}'
+                          : 'Attivo, notifiche bloccate da Android',
+                    )
+                  : null,
+              value: _status?.slots[i]['enabled'] == true,
+              onChanged: _busy || _status == null
+                  ? null
+                  : (enabled) => _run(() async {
+                      if (enabled) {
+                        await AndroidReminderScheduler.channel.invokeMethod(
+                          'requestNotifications',
+                        );
+                      }
+                      await (await ref.read(
+                        backupServiceProvider.future,
+                      )).setReminder(id, enabled);
+                    }),
+            ),
+          if (_status != null) ...[
+            Text(
+              _status!.allowed
+                  ? 'Notifiche consentite'
+                  : 'Notifiche non consentite: abilita app e canale nelle impostazioni Android.',
+            ),
+            const SizedBox(height: 6),
+            Text(
+              _status!.exact
+                  ? 'Precisione: consentita'
+                  : 'I promemoria possono arrivare in ritardo',
+            ),
+            Text('Fuso corrente: ${_status!.zone}'),
+          ],
+          if (_error != null)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Text(_error!, semanticsLabel: _error),
+            ),
+          const SizedBox(height: 12),
+          OutlinedButton(
+            onPressed: _busy
                 ? null
-                : (enabled) => _run(() async {
-                    await ref
-                        .read(reminderSchedulerProvider)
-                        .enable(id, enabled);
+                : () => _run(
+                    () => AndroidReminderScheduler.channel.invokeMethod(
+                      'notificationSettings',
+                    ),
+                  ),
+            child: const Text('Impostazioni notifiche Android'),
+          ),
+          OutlinedButton(
+            onPressed: _busy
+                ? null
+                : () => _run(
+                    () => AndroidReminderScheduler.channel.invokeMethod(
+                      'exactSettings',
+                    ),
+                  ),
+            child: const Text('Consenti promemoria precisi'),
+          ),
+          FilledButton.icon(
+            onPressed: _busy
+                ? null
+                : () => _run(() async {
+                    await ref.read(reminderSchedulerProvider).test();
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Notifica di prova inviata'),
+                        ),
+                      );
+                    }
                   }),
+            icon: const Icon(Icons.notifications_active_outlined),
+            label: const Text('Invia notifica di prova'),
           ),
-        if (_status != null) ...[
-          Text(
-            _status!.allowed
-                ? 'Notifiche consentite'
-                : 'Notifiche non consentite: abilita app e canale nelle impostazioni Android.',
-          ),
-          const SizedBox(height: 6),
-          Text(
-            _status!.exact
-                ? 'Precisione: consentita'
-                : 'I promemoria possono arrivare in ritardo',
-          ),
-          Text('Fuso corrente: ${_status!.zone}'),
         ],
-        if (_error != null)
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            child: Text(_error!, semanticsLabel: _error),
-          ),
-        const SizedBox(height: 12),
-        OutlinedButton(
-          onPressed: _busy
-              ? null
-              : () => _run(
-                  () => AndroidReminderScheduler.channel.invokeMethod(
-                    'notificationSettings',
-                  ),
-                ),
-          child: const Text('Impostazioni notifiche Android'),
-        ),
-        OutlinedButton(
-          onPressed: _busy
-              ? null
-              : () => _run(
-                  () => AndroidReminderScheduler.channel.invokeMethod(
-                    'exactSettings',
-                  ),
-                ),
-          child: const Text('Consenti promemoria precisi'),
-        ),
-        FilledButton.icon(
-          onPressed: _busy
-              ? null
-              : () => _run(() async {
-                  await ref.read(reminderSchedulerProvider).test();
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Notifica di prova inviata'),
-                      ),
-                    );
-                  }
-                }),
-          icon: const Icon(Icons.notifications_active_outlined),
-          label: const Text('Invia notifica di prova'),
-        ),
-      ],
-    ),
-  );
+      ),
+    );
+  }
+
   String _next(String value) {
     final date = value.split('T').first.split('-').reversed.join('/');
     return '$date ${value.split('T').last.substring(0, 5)}';

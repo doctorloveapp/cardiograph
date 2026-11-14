@@ -1,4 +1,5 @@
 import '../reminders/reminders.dart';
+import '../backup/backup_settings.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -31,11 +32,25 @@ class SettingsPage extends ConsumerWidget {
                   'Superfici opache per una lettura più confortevole.',
                 ),
                 value: ref.watch(opaqueProvider),
-                onChanged: ref.read(opaqueProvider.notifier).set,
+                onChanged: (value) async {
+                  try {
+                    await ref.read(opaqueProvider.notifier).set(value);
+                  } catch (_) {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Preferenza non salvata. Riprova.'),
+                        ),
+                      );
+                    }
+                  }
+                },
               ),
             ],
           ),
         ),
+        const SizedBox(height: 20),
+        const BackupSettings(),
         const SizedBox(height: 20),
         const ReminderSettings(),
         const SizedBox(height: 24),

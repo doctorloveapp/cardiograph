@@ -1,3 +1,4 @@
+import '../../core/design_system/components.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -100,7 +101,7 @@ class _ManualEditorState extends ConsumerState<ManualEditor> {
   }) async =>
       await showDialog<bool>(
         context: context,
-        builder: (c) => AlertDialog(
+        builder: (c) => GlassDialog(
           title: Text(title),
           content: SingleChildScrollView(child: Text(body)),
           actions: [

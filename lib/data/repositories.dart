@@ -101,38 +101,40 @@ class MeasurementRepository {
       watchQuery(() => monthSummary(month));
   Future<void> save(Measurement m, {bool editing = false}) async {
     m.validate();
-    await db.transaction(() async {
-      if (editing) {
-        final values = Map<String, Object?>.from(m.values)..remove('id');
-        final changed = await db.customUpdate(
-          'UPDATE measurements SET ${values.keys.map((k) => '$k = ?').join(',')} WHERE id = ? AND revision = ?',
-          variables: sqlVariables([...values.values, m.id, m.revision - 1]),
-        );
-        if (changed != 1) {
-          throw StateError(
-            'La lettura è stata modificata. Riaprila dal diario.',
+    await db.write(
+      () => db.transaction(() async {
+        if (editing) {
+          final values = Map<String, Object?>.from(m.values)..remove('id');
+          final changed = await db.customUpdate(
+            'UPDATE measurements SET ${values.keys.map((k) => '$k = ?').join(',')} WHERE id = ? AND revision = ?',
+            variables: sqlVariables([...values.values, m.id, m.revision - 1]),
           );
-        }
-      } else {
-        final previous = await dao.get(m.id);
-        if (previous != null) {
-          if (previous.systolic != m.systolic ||
-              previous.diastolic != m.diastolic ||
-              previous.pulse != m.pulse ||
-              previous.measuredAtUtc != m.measuredAtUtc ||
-              previous.note != m.note) {
+          if (changed != 1) {
             throw StateError(
-              'Questa lettura risulta già salvata. Controlla il diario.',
+              'La lettura è stata modificata. Riaprila dal diario.',
             );
           }
-          return;
+        } else {
+          final previous = await dao.get(m.id);
+          if (previous != null) {
+            if (previous.systolic != m.systolic ||
+                previous.diastolic != m.diastolic ||
+                previous.pulse != m.pulse ||
+                previous.measuredAtUtc != m.measuredAtUtc ||
+                previous.note != m.note) {
+              throw StateError(
+                'Questa lettura risulta già salvata. Controlla il diario.',
+              );
+            }
+            return;
+          }
+          await db.customStatement(
+            'INSERT INTO measurements (${m.values.keys.join(',')}) VALUES (${List.filled(m.values.length, '?').join(',')})',
+            m.values.values.toList(),
+          );
         }
-        await db.customStatement(
-          'INSERT INTO measurements (${m.values.keys.join(',')}) VALUES (${List.filled(m.values.length, '?').join(',')})',
-          m.values.values.toList(),
-        );
-      }
-    });
+      }),
+    );
     if (!_changes.isClosed) _changes.add(null);
   }
 
@@ -154,15 +156,21 @@ class MeasurementRepository {
   }
 
   Future<void> delete(Measurement m) async {
-    await db.transaction(() async {
-      final count = await db.customUpdate(
-        'DELETE FROM measurements WHERE id = ? AND revision = ?',
-        variables: sqlVariables([m.id, m.revision]),
-      );
-      if (count != 1) {
-        throw StateError('Lettura modificata: ricarica il diario.');
-      }
-    });
+    await db.write(
+      () => db.transaction(() async {
+        final count = await db.customUpdate(
+          'DELETE FROM measurements WHERE id = ? AND revision = ?',
+          variables: sqlVariables([m.id, m.revision]),
+        );
+        if (count != 1) {
+          throw StateError('Lettura modificata: ricarica il diario.');
+        }
+      }),
+    );
+    if (!_changes.isClosed) _changes.add(null);
+  }
+
+  void notifyChanged() {
     if (!_changes.isClosed) _changes.add(null);
   }
 
@@ -171,29 +179,74 @@ class MeasurementRepository {
 }
 
 class AppSettings {
-  final bool protectBackupWithPassword;
-  const AppSettings({this.protectBackupWithPassword = false});
+  final bool protectBackupWithPassword, opaque;
+  final List<bool> reminders;
+  final DateTime? lastBackupUtc;
+  const AppSettings({
+    this.protectBackupWithPassword = false,
+    this.opaque = false,
+    this.reminders = const [false, false, false],
+    this.lastBackupUtc,
+  });
+  AppSettings copyWith({
+    bool? protectBackupWithPassword,
+    bool? opaque,
+    List<bool>? reminders,
+    DateTime? lastBackupUtc,
+  }) => AppSettings(
+    protectBackupWithPassword:
+        protectBackupWithPassword ?? this.protectBackupWithPassword,
+    opaque: opaque ?? this.opaque,
+    reminders: reminders ?? this.reminders,
+    lastBackupUtc: lastBackupUtc ?? this.lastBackupUtc,
+  );
+  Map<String, Object> get portable => {
+    'protectBackupWithPassword': protectBackupWithPassword,
+    'opaque': opaque,
+    'reminders': reminders,
+  };
 }
 
 class SettingsRepository {
   final AppDatabase db;
   const SettingsRepository(this.db);
   Future<AppSettings> read() async {
-    final row = await db
-        .customSelect(
-          'SELECT protect_backup_with_password FROM app_settings WHERE id = 1',
-        )
-        .getSingle();
+    final r =
+        (await db
+                .customSelect('SELECT * FROM app_settings WHERE id=1')
+                .getSingle())
+            .data;
     return AppSettings(
-      protectBackupWithPassword:
-          row.read<int>('protect_backup_with_password') == 1,
+      protectBackupWithPassword: r['protect_backup_with_password'] == 1,
+      opaque: r['opaque'] == 1,
+      reminders: [
+        r['reminder_morning'] == 1,
+        r['reminder_afternoon'] == 1,
+        r['reminder_evening'] == 1,
+      ],
+      lastBackupUtc: r['last_backup_utc'] == null
+          ? null
+          : DateTime.fromMillisecondsSinceEpoch(
+              r['last_backup_utc'] as int,
+              isUtc: true,
+            ),
     );
   }
 
-  Future<void> save(AppSettings settings) => db.transaction(
-    () => db.customStatement(
-      'UPDATE app_settings SET protect_backup_with_password = ? WHERE id = 1',
-      [settings.protectBackupWithPassword ? 1 : 0],
+  Future<void> save(AppSettings settings) =>
+      db.write(() => db.transaction(() => writeInsideTransaction(settings)));
+  Future<void> update(AppSettings Function(AppSettings) change) => db.write(
+    () => db.transaction(
+      () async => writeInsideTransaction(change(await read())),
     ),
+  );
+  Future<void> writeInsideTransaction(AppSettings s) => db.customStatement(
+    'UPDATE app_settings SET protect_backup_with_password=?,opaque=?,reminder_morning=?,reminder_afternoon=?,reminder_evening=?,last_backup_utc=? WHERE id=1',
+    [
+      s.protectBackupWithPassword ? 1 : 0,
+      s.opaque ? 1 : 0,
+      ...s.reminders.map((v) => v ? 1 : 0),
+      s.lastBackupUtc?.millisecondsSinceEpoch,
+    ],
   );
 }

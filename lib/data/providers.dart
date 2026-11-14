@@ -47,3 +47,7 @@ final periodReadingsProvider = StreamProvider.autoDispose
       final repo = await ref.watch(measurementRepositoryProvider.future);
       yield* repo.watch(period: CivilPeriod(period.$1, period.$2));
     });
+
+final appSettingsProvider = FutureProvider<AppSettings>(
+  (ref) async => (await ref.watch(settingsRepositoryProvider.future)).read(),
+);

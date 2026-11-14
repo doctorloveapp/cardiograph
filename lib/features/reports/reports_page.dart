@@ -53,7 +53,7 @@ class _ReportsPageState extends ConsumerState<ReportsPage> {
       final result = await showDialog<DateTime>(
         context: context,
         builder: (c) => StatefulBuilder(
-          builder: (c, update) => AlertDialog(
+          builder: (c, update) => GlassDialog(
             title: const Text('Mese del report'),
             content: Column(
               mainAxisSize: MainAxisSize.min,
@@ -140,7 +140,7 @@ class _ReportsPageState extends ConsumerState<ReportsPage> {
       if (!mounted) return;
       final confirmed = await showDialog<bool>(
         context: context,
-        builder: (c) => AlertDialog(
+        builder: (c) => GlassDialog(
           title: const Text('Riepilogo report'),
           content: Text(
             '${snapshot.period.label}\n${snapshot.rows.length} letture\nIntestazione: ${snapshot.heading.isEmpty ? 'Nessuna' : snapshot.heading}',

@@ -41,6 +41,13 @@ object ReminderEngine {
         prefs(c).edit().putBoolean("enabled_$id", enabled).commit()
         reconcile(c)
     }
+    @Synchronized fun applyPreferences(c: Context, enabled: List<Boolean>) {
+        require(enabled.size == 3)
+        val edit = prefs(c).edit()
+        ReminderPlan.slots.keys.forEachIndexed { index, id -> edit.putBoolean("enabled_$id", enabled[index]) }
+        check(edit.commit()) { "Preferenze promemoria non salvate" }
+        reconcile(c)
+    }
     @Synchronized fun reconcile(c: Context) {
         channel(c)
         val p = prefs(c); val alarms = manager(c)

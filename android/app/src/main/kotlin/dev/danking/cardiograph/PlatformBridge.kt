@@ -58,6 +58,11 @@ class PlatformBridge(private val activity: MainActivity, engine: FlutterEngine) 
                         result.success(null)
                     }
                     "reminderStatus" -> result.success(ReminderEngine.status(activity))
+                    "applyReminderPreferences" -> {
+                        val values = call.argument<List<Boolean>>("enabled") ?: error("Preferenze mancanti")
+                        ReminderEngine.applyPreferences(activity, values)
+                        result.success(ReminderEngine.status(activity))
+                    }
                     "reconcile" -> { ReminderEngine.reconcile(activity); result.success(ReminderEngine.status(activity)) }
                     "setReminder" -> {
                         ReminderEngine.set(activity, call.argument<Int>("id")!!, call.argument<Boolean>("enabled") == true)
@@ -112,8 +117,29 @@ class PlatformBridge(private val activity: MainActivity, engine: FlutterEngine) 
                 val value: Any = if (code == 703) {
                     activity.contentResolver.openOutputStream(uri, "wt")?.use { it.write(requireNotNull(payload)); it.flush() }
                         ?: error("Destinazione non scrivibile")
+                    // Reopen when the provider supports reading, and compare complete bytes.
+                    // Some create-only providers cannot grant read access; writing still works.
+                    val input = try { activity.contentResolver.openInputStream(uri) }
+                        catch (_: SecurityException) { null }
+                        catch (_: java.io.FileNotFoundException) { null }
+                    input?.use {
+                        val expected = requireNotNull(payload)
+                        val sha = java.security.MessageDigest.getInstance("SHA-256")
+                        val buffer = ByteArray(8192); var size = 0
+                        while (true) {
+                            val n = it.read(buffer); if (n < 0) break
+                            size += n; check(size <= expected.size) { "Dimensione esportata errata" }
+                            sha.update(buffer, 0, n)
+                        }
+                        check(size == expected.size && java.security.MessageDigest.isEqual(sha.digest(),
+                            java.security.MessageDigest.getInstance("SHA-256").digest(expected))) { "Verifica esportazione non riuscita" }
+                    }
                     true
                 } else activity.contentResolver.openInputStream(uri)?.use {
+                    val name = activity.contentResolver.query(uri, arrayOf(android.provider.OpenableColumns.DISPLAY_NAME), null, null, null)?.use { cursor ->
+                        if (cursor.moveToFirst()) cursor.getString(0) else null
+                    }
+                    check(name?.endsWith(".cardiograph", ignoreCase = true) == true) { "Seleziona un file .cardiograph" }
                     val output = java.io.ByteArrayOutputStream()
                     val buffer = ByteArray(8192)
                     while (true) {

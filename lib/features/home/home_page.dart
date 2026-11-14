@@ -63,11 +63,25 @@ class HomePage extends ConsumerWidget {
                                 decoration: BoxDecoration(
                                   color: Brand.red,
                                   shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: Colors.white.withValues(alpha: .75),
+                                    width: 1.5,
+                                  ),
+                                  gradient: LinearGradient(
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                    colors: [
+                                      Color(0xffc7354a),
+                                      Brand.red,
+                                      Color(0xff921c30),
+                                    ],
+                                    stops: [0, .45, 1],
+                                  ),
                                   boxShadow: [
                                     BoxShadow(
                                       color: Brand.red.withValues(alpha: .22),
-                                      blurRadius: 16,
-                                      offset: const Offset(0, 6),
+                                      blurRadius: 20,
+                                      offset: const Offset(4, 9),
                                     ),
                                   ],
                                 ),
