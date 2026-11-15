@@ -1,3 +1,4 @@
+import '../features/settings/privacy_page.dart';
 import '../features/reminders/reminder_sync.dart';
 import '../features/settings/about_page.dart';
 import '../features/backup/backup_service.dart';
@@ -54,6 +55,7 @@ GoRouter createRouter() => GoRouter(
     ),
     GoRoute(path: '/about', builder: (c, s) => const AboutPage()),
     GoRoute(path: '/guide', builder: (c, s) => const GuidePage()),
+    GoRoute(path: '/privacy', builder: (c, s) => const PrivacyPage()),
     GoRoute(
       path: '/settings/reminders',
       builder: (c, s) => reminderSettingsPage(),
