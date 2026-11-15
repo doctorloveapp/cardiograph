@@ -38,13 +38,14 @@ void main() {
     await db.close();
   });
   test(
-    'Versione pubblica unica 1.1.0 build 2, nessun suffisso di sviluppo',
+    'Versione pubblica unica 1.2.0 build 3, nessun suffisso di sviluppo',
     () {
-      expect(AppVersion.name, '1.1.0');
-      expect(AppVersion.build, 2);
+      expect(AppVersion.name, '1.2.0');
+      expect(AppVersion.build, 3);
+      expect(AppVersion.label, 'CardioGraph 1.2.0 (build 3)');
       expect(
         File('pubspec.yaml').readAsStringSync(),
-        contains('version: 1.1.0+2'),
+        contains('version: 1.2.0+3'),
       );
       for (final p in [
         'README.md',
@@ -64,7 +65,7 @@ void main() {
       MaterialApp(theme: appTheme(true), home: const AboutPage()),
     );
     expect(find.text(AppVersion.label), findsOneWidget);
-    expect(find.text('Sviluppatore: Dan King'), findsOneWidget);
+    expect(find.text('Dan King'), findsOneWidget);
     for (var i = 0; i < 10; i++) {
       await t.drag(find.byType(ListView), const Offset(0, -500));
       await t.pumpAndSettle();
@@ -72,7 +73,7 @@ void main() {
     expect(t.takeException(), isNull);
   });
   test(
-    'Migrazione v2 → v3 conserva letture e flag true senza sovrascrittura',
+    'Migrazione v2 → v4 conserva letture e flag true senza sovrascrittura',
     () async {
       final directory = await Directory.systemTemp.createTemp(
         'cardiograph-release-migration-',
@@ -107,7 +108,7 @@ void main() {
               .data
               .values
               .single,
-          3,
+          4,
         );
       } finally {
         await repo.close();

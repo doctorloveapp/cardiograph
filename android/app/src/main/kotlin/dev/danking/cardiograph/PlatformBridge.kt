@@ -60,8 +60,17 @@ class PlatformBridge(private val activity: MainActivity, engine: FlutterEngine) 
                     "reminderStatus" -> result.success(ReminderEngine.status(activity))
                     "applyReminderPreferences" -> {
                         val values = call.argument<List<Boolean>>("enabled") ?: error("Preferenze mancanti")
-                        ReminderEngine.applyPreferences(activity, values)
+                        val minutes = requireNotNull(call.argument<List<Int>>("minutes"))
+                        val coverage = requireNotNull(call.argument<Map<String, List<String>>>("coverage"))
+                        ReminderEngine.applyPreferences(activity, values, minutes, coverage)
                         result.success(ReminderEngine.status(activity))
+                    }
+                    "beginReminderMutation" -> { ReminderEngine.beginMutation(activity); result.success(null) }
+                    "openRepository" -> {
+                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/doctorloveapp/cardiograph"))
+                            .addCategory(Intent.CATEGORY_BROWSABLE)
+                        activity.startActivity(intent)
+                        result.success(null)
                     }
                     "reconcile" -> { ReminderEngine.reconcile(activity); result.success(ReminderEngine.status(activity)) }
                     "setReminder" -> {

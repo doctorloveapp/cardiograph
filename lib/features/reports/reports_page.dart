@@ -26,6 +26,9 @@ class _ReportsPageState extends ConsumerState<ReportsPage> {
   bool _busy = false;
   String? _error;
   ReportPeriod get _period => switch (_mode) {
+    ReportMode.all => throw StateError(
+      'Periodo definito dallo snapshot completo',
+    ),
     ReportMode.day => ReportPeriod.day(_day),
     ReportMode.week => ReportPeriod.week(_day),
     ReportMode.month => ReportPeriod.month(_day.year, _day.month),
@@ -129,9 +132,13 @@ class _ReportsPageState extends ConsumerState<ReportsPage> {
     });
     try {
       final repo = await ref.read(measurementRepositoryProvider.future);
+      final rows = _mode == ReportMode.all
+          ? await repo.snapshotAll()
+          : await repo.snapshot(_period.civil);
+      if (rows.isEmpty) throw StateError('Nessuna misurazione nel periodo');
       final snapshot = ReportSnapshot(
-        period: _period,
-        rows: await repo.snapshot(_period.civil),
+        period: _mode == ReportMode.all ? ReportPeriod.covering(rows) : _period,
+        rows: rows,
         heading: _heading.text.trim(),
         generatedAt: ref.read(clockProvider).now(),
       );
@@ -216,6 +223,7 @@ class _ReportsPageState extends ConsumerState<ReportsPage> {
                         'Settimana specifica',
                         'Mese specifico',
                         'Intervallo personalizzato',
+                        'Tutte le misurazioni',
                       ][m.index],
                     ),
                   ),
@@ -223,11 +231,25 @@ class _ReportsPageState extends ConsumerState<ReportsPage> {
               onChanged: _busy ? null : (v) => setState(() => _mode = v!),
             ),
             const SizedBox(height: 16),
-            OutlinedButton.icon(
-              onPressed: _busy ? null : _select,
-              icon: const Icon(Icons.date_range),
-              label: Text(_period.label),
-            ),
+            if (_mode == ReportMode.all)
+              ref
+                  .watch(measurementsProvider)
+                  .when(
+                    loading: () => const LinearProgressIndicator(),
+                    error: (_, _) =>
+                        const Text('Impossibile leggere l’archivio'),
+                    data: (rows) => Text(
+                      rows.isEmpty
+                          ? 'Nessuna misurazione nel periodo'
+                          : ReportPeriod.covering(rows).label,
+                    ),
+                  )
+            else
+              OutlinedButton.icon(
+                onPressed: _busy ? null : _select,
+                icon: const Icon(Icons.date_range),
+                label: Text(_period.label),
+              ),
             const SizedBox(height: 16),
             TextField(
               controller: _heading,

@@ -59,7 +59,13 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.byTooltip('Impostazioni'));
     await tester.pumpAndSettle();
-    await tester.tap(find.byType(Switch).first);
+    expect(find.text('Promemoria'), findsOneWidget);
+    expect(find.text('Backup e dati'), findsOneWidget);
+    expect(find.text('Info'), findsOneWidget);
+    expect(find.text('Leggibilità'), findsNothing);
+    await tester.tap(find.text('Backup e dati'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('protect-backup')));
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
   });

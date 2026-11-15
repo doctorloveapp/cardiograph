@@ -1,7 +1,7 @@
 import '../../core/time/measurement_time.dart';
 import '../measurements/measurement.dart';
 
-enum ReportMode { day, week, month, custom }
+enum ReportMode { day, week, month, custom, all }
 
 class ReportPeriod {
   final CivilPeriod civil;
@@ -20,6 +20,14 @@ class ReportPeriod {
     DateTime.utc(year, month + 1, 0),
   );
   factory ReportPeriod.custom(DateTime a, DateTime b) => ReportPeriod._(a, b);
+  factory ReportPeriod.covering(Iterable<Measurement> rows) {
+    final dates = rows.map((m) => m.localDate).toList()..sort();
+    if (dates.isEmpty) throw StateError('Nessuna misurazione nel periodo');
+    return ReportPeriod._(
+      DateTime.parse(dates.first),
+      DateTime.parse(dates.last),
+    );
+  }
   String get label => '${displayDate(civil.start)} – ${displayDate(civil.end)}';
 }
 

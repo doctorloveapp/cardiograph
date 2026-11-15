@@ -6,9 +6,7 @@ class GlassDialog extends AlertDialog {
   const GlassDialog({super.key, super.title, super.content, super.actions});
   @override
   Widget build(BuildContext context) {
-    final opaque =
-        Theme.of(context).extension<SurfaceStyle>()!.opaque ||
-        MediaQuery.of(context).accessibleNavigation;
+    final opaque = Theme.of(context).extension<SurfaceStyle>()!.opaque;
     return BackdropFilter(
       filter: ImageFilter.blur(
         sigmaX: opaque ? 0 : Brand.blur,
@@ -24,9 +22,7 @@ class GlassSheet extends StatelessWidget {
   const GlassSheet({super.key, required this.child});
   @override
   Widget build(BuildContext context) {
-    final opaque =
-        Theme.of(context).extension<SurfaceStyle>()!.opaque ||
-        MediaQuery.of(context).accessibleNavigation;
+    final opaque = Theme.of(context).extension<SurfaceStyle>()!.opaque;
     return ClipRRect(
       borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
       child: BackdropFilter(
@@ -45,9 +41,7 @@ class GlassCard extends StatelessWidget {
   const GlassCard({super.key, required this.child});
   @override
   Widget build(BuildContext context) {
-    final opaque =
-        Theme.of(context).extension<SurfaceStyle>()!.opaque ||
-        MediaQuery.of(context).accessibleNavigation;
+    final opaque = Theme.of(context).extension<SurfaceStyle>()!.opaque;
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(Brand.cardRadius),
@@ -130,9 +124,7 @@ class GlassNavigationSurface extends StatelessWidget {
   const GlassNavigationSurface({super.key, required this.child});
   @override
   Widget build(BuildContext context) {
-    final opaque =
-        Theme.of(context).extension<SurfaceStyle>()!.opaque ||
-        MediaQuery.of(context).accessibleNavigation;
+    final opaque = Theme.of(context).extension<SurfaceStyle>()!.opaque;
     return Container(
       decoration: BoxDecoration(
         boxShadow: [

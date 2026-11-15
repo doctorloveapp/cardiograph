@@ -1,3 +1,4 @@
+import '../reminders/reminder_sync.dart';
 import '../../app/version.dart';
 import 'dart:convert';
 import 'dart:typed_data';
@@ -133,7 +134,7 @@ class BackupArchive {
       ? null
       : (rows.map((m) => m.localDate).toList()..sort()).last;
   Map<String, dynamic> get payload => {
-    'schemaVersion': 2,
+    'schemaVersion': 3,
     'readings': (rows.toList()..sort((a, b) => a.id.compareTo(b.id)))
         .map(
           (m) => {
@@ -166,7 +167,7 @@ class BackupArchive {
     }
     final p = Map<String, dynamic>.from(_map(value));
     _keys(p, {'schemaVersion', 'readings', 'preferences'});
-    final version = _int(p['schemaVersion'], 1, 2);
+    final version = _int(p['schemaVersion'], 1, 3);
     final records = p['readings'];
     if (records is! List || records.length > maxBackupReadings) {
       _invalid('Limite di 100.000 letture superato');
@@ -268,7 +269,23 @@ class BackupArchive {
     }
     final prefs = Map<String, dynamic>.from(_map(p['preferences']));
     if (version == 1) prefs.putIfAbsent('opaque', () => false);
-    _keys(prefs, {'protectBackupWithPassword', 'opaque', 'reminders'});
+    if (version < 3) {
+      _keys(prefs, {'protectBackupWithPassword', 'opaque', 'reminders'});
+      _bool(prefs['opaque']); // Validate legacy field before retiring it.
+      prefs.remove('opaque');
+      prefs['reminderMinutes'] = [600, 960, 1260];
+    }
+    _keys(prefs, {'protectBackupWithPassword', 'reminderMinutes', 'reminders'});
+    final minutes = prefs['reminderMinutes'];
+    if (minutes is! List ||
+        minutes.length != 3 ||
+        List.generate(
+          3,
+          (i) =>
+              minutes[i] is! int || !validReminderMinute(i, minutes[i] as int),
+        ).any((bad) => bad)) {
+      _invalid('Orario promemoria fuori dalla fascia');
+    }
     final reminders = prefs['reminders'];
     if (reminders is! List || reminders.length != 3) {
       _invalid('Preferenze non valide');
@@ -277,7 +294,7 @@ class BackupArchive {
       rows,
       AppSettings(
         protectBackupWithPassword: _bool(prefs['protectBackupWithPassword']),
-        opaque: _bool(prefs['opaque']),
+        reminderMinutes: minutes.cast<int>(),
         reminders: reminders.map(_bool).toList(),
       ),
     );

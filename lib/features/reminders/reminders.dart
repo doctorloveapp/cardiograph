@@ -1,3 +1,4 @@
+import 'reminder_sync.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -131,17 +132,17 @@ class _ReminderSettingsState extends ConsumerState<ReminderSettings>
           ),
           const SizedBox(height: 8),
           const Text(
-            'Orari locali fissi. Restano attivi anche dopo una misurazione.',
+            'Ti avvisiamo solo se manca una lettura nella sessione. Gli orari seguono il fuso del telefono.',
           ),
-          for (final (i, id, hour, name) in [
-            (0, 1000, '10:00', 'Mattina'),
-            (1, 1600, '16:00', 'Pomeriggio'),
-            (2, 2100, '21:00', 'Sera'),
-          ])
+          for (final (i, id, name) in [
+            (0, 1000, 'Mattina'),
+            (1, 1600, 'Pomeriggio'),
+            (2, 2100, 'Sera'),
+          ]) ...[
             SwitchListTile(
               contentPadding: EdgeInsets.zero,
               key: ValueKey('reminder-$id'),
-              title: Text('$name · $hour'),
+              title: Text(name),
               subtitle: _status != null && _status!.slots[i]['enabled'] == true
                   ? Text(
                       _status!.allowed
@@ -162,6 +163,59 @@ class _ReminderSettingsState extends ConsumerState<ReminderSettings>
                         backupServiceProvider.future,
                       )).setReminder(id, enabled);
                     }),
+            ),
+            OutlinedButton.icon(
+              key: ValueKey('reminder-time-$id'),
+              icon: const Icon(Icons.schedule),
+              label: Text(
+                'Orario $name: ${reminderTime((_status?.slots[i]['minutes'] as int?) ?? [600, 960, 1260][i])}',
+              ),
+              onPressed: _busy || _status == null
+                  ? null
+                  : () async {
+                      final current = _status!.slots[i]['minutes'] as int;
+                      final time = await showTimePicker(
+                        context: context,
+                        initialTime: TimeOfDay(
+                          hour: current ~/ 60,
+                          minute: current % 60,
+                        ),
+                        helpText: [
+                          'Mattina · 07:00–13:00',
+                          'Pomeriggio · 13:01–19:00',
+                          'Sera · 19:01–06:59',
+                        ][i],
+                        builder: (c, child) => MediaQuery(
+                          data: MediaQuery.of(
+                            c,
+                          ).copyWith(alwaysUse24HourFormat: true),
+                          child: child!,
+                        ),
+                      );
+                      if (time == null || !mounted) return;
+                      final minutes = time.hour * 60 + time.minute;
+                      if (!validReminderMinute(i, minutes)) {
+                        setState(
+                          () => _error = [
+                            'Scegli un orario tra 07:00 e 13:00.',
+                            'Scegli un orario tra 13:01 e 19:00.',
+                            'Scegli un orario tra 19:01 e 06:59.',
+                          ][i],
+                        );
+                        return;
+                      }
+                      await _run(
+                        () async => (await ref.read(
+                          backupServiceProvider.future,
+                        )).setReminderTime(id, minutes),
+                      );
+                    },
+            ),
+            const SizedBox(height: 8),
+          ],
+          if (_status?.slots.any((s) => s['pendingSync'] == true) == true)
+            const Text(
+              'Sincronizzazione promemoria da completare: riapri la schermata per riprovare.',
             ),
           if (_status != null) ...[
             Text(

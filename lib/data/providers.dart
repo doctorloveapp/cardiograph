@@ -1,3 +1,4 @@
+import '../features/reminders/reminder_sync.dart';
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
@@ -15,8 +16,12 @@ final databaseProvider = FutureProvider<AppDatabase>((ref) async {
 final measurementRepositoryProvider = FutureProvider<MeasurementRepository>((
   ref,
 ) async {
-  final repository = MeasurementRepository(
-    await ref.watch(databaseProvider.future),
+  final db = await ref.watch(databaseProvider.future);
+  late final MeasurementRepository repository;
+  repository = MeasurementRepository(
+    db,
+    beforeMutation: ReminderSync.begin,
+    afterMutation: () => ReminderSync(repository).apply(),
   );
   ref.onDispose(() => unawaited(repository.close()));
   return repository;

@@ -6,7 +6,7 @@ final clockProvider = Provider<AppClock>((ref) => const SystemClock());
 
 class OpaqueController extends Notifier<bool> {
   @override
-  bool build() => ref.watch(appSettingsProvider).asData?.value.opaque ?? false;
+  bool build() => false;
   Future<void> set(bool value) async {
     final repo = await ref.read(settingsRepositoryProvider.future);
     await repo.update((p) => p.copyWith(opaque: value));

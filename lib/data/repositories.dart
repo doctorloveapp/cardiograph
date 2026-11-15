@@ -41,7 +41,41 @@ class MeasurementRepository {
   final AppDatabase db;
   late final dao = MeasurementDao(db);
   final _changes = StreamController<void>.broadcast(sync: true);
-  MeasurementRepository(this.db);
+  final Future<void> Function()? beforeMutation, afterMutation;
+  MeasurementRepository(this.db, {this.beforeMutation, this.afterMutation});
+  Future<T> _mutate<T>(Future<T> Function() action) => db.write(() async {
+    // A durable unknown marker prevents a stale coverage snapshot from notifying
+    // if the process dies between the DB commit and the Android mirror update.
+    await beforeMutation?.call();
+    try {
+      return await action();
+    } finally {
+      try {
+        await afterMutation?.call();
+      } catch (_) {
+        /* Keep marker; retry on resume. */
+      }
+    }
+  });
+
+  Future<Map<String, List<String>>> reminderCoverage() async {
+    final rows = await db.customSelect("""SELECT DISTINCT
+      CASE WHEN local_time >= '07:00:00' AND local_time < '13:01:00' THEN '1000'
+      WHEN local_time >= '13:01:00' AND local_time < '19:01:00' THEN '1600'
+      ELSE '2100' END AS slot,
+      CASE WHEN local_time < '07:00:00' THEN date(local_date, '-1 day')
+      ELSE local_date END AS anchor FROM measurements""").get();
+    return {
+      for (final id in ['1000', '1600', '2100'])
+        id: rows
+            .where((r) => r.read<String>('slot') == id)
+            .map((r) => r.read<String>('anchor'))
+            .toList(),
+    };
+  }
+
+  Future<List<Measurement>> snapshotAll() =>
+      db.transaction(() async => List.unmodifiable(await list()));
   Future<List<Measurement>> list({CivilPeriod? period}) =>
       dao.list(period: period);
   Future<List<Measurement>> snapshot(CivilPeriod period) => db.transaction(
@@ -101,7 +135,7 @@ class MeasurementRepository {
       watchQuery(() => monthSummary(month));
   Future<void> save(Measurement m, {bool editing = false}) async {
     m.validate();
-    await db.write(
+    await _mutate(
       () => db.transaction(() async {
         if (editing) {
           final values = Map<String, Object?>.from(m.values)..remove('id');
@@ -156,7 +190,7 @@ class MeasurementRepository {
   }
 
   Future<void> delete(Measurement m) async {
-    await db.write(
+    await _mutate(
       () => db.transaction(() async {
         final count = await db.customUpdate(
           'DELETE FROM measurements WHERE id = ? AND revision = ?',
@@ -181,28 +215,32 @@ class MeasurementRepository {
 class AppSettings {
   final bool protectBackupWithPassword, opaque;
   final List<bool> reminders;
+  final List<int> reminderMinutes;
   final DateTime? lastBackupUtc;
   const AppSettings({
     this.protectBackupWithPassword = false,
     this.opaque = false,
     this.reminders = const [false, false, false],
+    this.reminderMinutes = const [600, 960, 1260],
     this.lastBackupUtc,
   });
   AppSettings copyWith({
     bool? protectBackupWithPassword,
     bool? opaque,
     List<bool>? reminders,
+    List<int>? reminderMinutes,
     DateTime? lastBackupUtc,
   }) => AppSettings(
     protectBackupWithPassword:
         protectBackupWithPassword ?? this.protectBackupWithPassword,
     opaque: opaque ?? this.opaque,
     reminders: reminders ?? this.reminders,
+    reminderMinutes: reminderMinutes ?? this.reminderMinutes,
     lastBackupUtc: lastBackupUtc ?? this.lastBackupUtc,
   );
   Map<String, Object> get portable => {
     'protectBackupWithPassword': protectBackupWithPassword,
-    'opaque': opaque,
+    'reminderMinutes': reminderMinutes,
     'reminders': reminders,
   };
 }
@@ -218,7 +256,11 @@ class SettingsRepository {
             .data;
     return AppSettings(
       protectBackupWithPassword: r['protect_backup_with_password'] == 1,
-      opaque: r['opaque'] == 1,
+      opaque: false,
+      reminderMinutes: [
+        for (final band in ['morning', 'afternoon', 'evening'])
+          r['reminder_${band}_minutes'] as int,
+      ],
       reminders: [
         r['reminder_morning'] == 1,
         r['reminder_afternoon'] == 1,
@@ -241,11 +283,12 @@ class SettingsRepository {
     ),
   );
   Future<void> writeInsideTransaction(AppSettings s) => db.customStatement(
-    'UPDATE app_settings SET protect_backup_with_password=?,opaque=?,reminder_morning=?,reminder_afternoon=?,reminder_evening=?,last_backup_utc=? WHERE id=1',
+    'UPDATE app_settings SET protect_backup_with_password=?,opaque=?,reminder_morning=?,reminder_afternoon=?,reminder_evening=?,reminder_morning_minutes=?,reminder_afternoon_minutes=?,reminder_evening_minutes=?,last_backup_utc=? WHERE id=1',
     [
       s.protectBackupWithPassword ? 1 : 0,
-      s.opaque ? 1 : 0,
+      0,
       ...s.reminders.map((v) => v ? 1 : 0),
+      ...s.reminderMinutes,
       s.lastBackupUtc?.millisecondsSinceEpoch,
     ],
   );

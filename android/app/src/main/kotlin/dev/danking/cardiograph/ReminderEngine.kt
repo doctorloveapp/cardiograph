@@ -41,10 +41,24 @@ object ReminderEngine {
         prefs(c).edit().putBoolean("enabled_$id", enabled).commit()
         reconcile(c)
     }
-    @Synchronized fun applyPreferences(c: Context, enabled: List<Boolean>) {
-        require(enabled.size == 3)
+    @Synchronized fun beginMutation(c: Context) {
+        check(prefs(c).edit().putBoolean("coverage_dirty", true).commit())
+        // Do not cancel recurrence: a crash must not permanently remove reminders.
+    }
+    private fun covered(c: Context, id: Int) = prefs(c).getStringSet("coverage_$id", emptySet()) ?: emptySet()
+    private fun minute(c: Context, id: Int) = prefs(c).getInt("minutes_$id", requireNotNull(ReminderPlan.slots[id]) * 60)
+    @Synchronized fun applyPreferences(c: Context, enabled: List<Boolean>, minutes: List<Int>, coverage: Map<String, List<String>>) {
+        require(enabled.size == 3 && minutes.size == 3)
         val edit = prefs(c).edit()
-        ReminderPlan.slots.keys.forEachIndexed { index, id -> edit.putBoolean("enabled_$id", enabled[index]) }
+        ReminderPlan.slots.keys.forEachIndexed { index, id ->
+            require(ReminderPlan.validMinute(id, minutes[index]))
+            val dates = requireNotNull(coverage[id.toString()])
+            require(dates.size <= 100000 && dates.all { it.matches(Regex("\\d{4}-\\d{2}-\\d{2}")) })
+            edit.putBoolean("enabled_$id", enabled[index])
+            edit.putInt("minutes_$id", minutes[index])
+            edit.putStringSet("coverage_$id", dates.toSet())
+        }
+        edit.putBoolean("coverage_dirty", false)
         check(edit.commit()) { "Preferenze promemoria non salvate" }
         reconcile(c)
     }
@@ -56,7 +70,7 @@ object ReminderEngine {
         ReminderPlan.slots.keys.forEach { id ->
             alarms.cancel(pending(c, id, false)); alarms.cancel(pending(c, id, true))
             if (p.getBoolean("enabled_$id", false) && allowed) {
-                val at = ReminderPlan.next(id, now, p.getString("last_$id", null)).toInstant().toEpochMilli()
+                val at = ReminderPlan.next(id, now, p.getString("last_$id", null), minute(c, id), covered(c, id)).toInstant().toEpochMilli()
                 // Inexact guard survives revocation: Android cancels exact alarms and kills
                 // the process on revocation. Delivery is deduplicated by slot/local day.
                 alarms.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, at, pending(c, id, true))
@@ -68,8 +82,8 @@ object ReminderEngine {
     }
     @Synchronized fun fire(c: Context, id: Int) {
         if (id !in ReminderPlan.slots) return
-        val p = prefs(c); val day = ZonedDateTime.now().toLocalDate().toString()
-        if (ReminderPlan.canDeliver(p.getBoolean("enabled_$id", false), allowed(c), p.getString("last_$id", null), day)) {
+        val p = prefs(c); val day = ReminderPlan.session(id, ZonedDateTime.now())
+        if (ReminderPlan.canDeliver(p.getBoolean("enabled_$id", false), allowed(c), p.getString("last_$id", null), day, day in covered(c, id), p.getBoolean("coverage_dirty", true))) {
             try {
                 post(c, id)
                 p.edit().putString("last_$id", day).commit()
@@ -96,7 +110,10 @@ object ReminderEngine {
         return mapOf("allowed" to allowed(c), "exact" to exact(c), "zone" to now.zone.id,
             "slots" to ReminderPlan.slots.map { (id, _) -> mapOf("id" to id,
                 "enabled" to p.getBoolean("enabled_$id", false),
-                "next" to ReminderPlan.next(id, now, p.getString("last_$id", null)).toString()) })
+                "minutes" to minute(c, id),
+                "pendingSync" to p.getBoolean("coverage_dirty", true),
+                "covered" to (ReminderPlan.session(id, now) in covered(c, id)),
+                "next" to ReminderPlan.next(id, now, p.getString("last_$id", null), minute(c, id), covered(c, id)).toString()) })
     }
 }
 

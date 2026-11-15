@@ -1,10 +1,10 @@
+import '../reminders/reminder_sync.dart';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/app_database.dart';
 import '../../data/repositories.dart';
 import '../../data/providers.dart';
-import '../../core/services/platform_services.dart';
 import '../measurements/measurement.dart';
 import 'backup_codec.dart';
 
@@ -136,6 +136,7 @@ class BackupService {
           row.read<String>('staging'),
         );
         await checkpoint?.call('prepared');
+        await repository.beforeMutation?.call();
         await db.transaction(() async {
           await db.customStatement('DELETE FROM measurements');
           await checkpoint?.call('afterDelete');
@@ -185,6 +186,11 @@ class BackupService {
         return RestoreOutcome(remindersPending: !await _recoverInside());
       } finally {
         if (!committed) {
+          try {
+            await repository.afterMutation?.call();
+          } catch (_) {
+            /* Resume retries. */
+          }
           // A crash here leaves a prepared row, cleaned on next open; active rows
           // have already been rolled back by SQLite. Never restore over a commit.
           await db.transaction(
@@ -204,8 +210,25 @@ class BackupService {
     if (index < 0) throw ArgumentError('Promemoria non valido');
     reminders[index] = enabled;
     final prefs = (await settings.read()).copyWith(reminders: reminders);
+    await repository.beforeMutation?.call();
     await db.transaction(() => settings.writeInsideTransaction(prefs));
     await applyReminders(reminders);
+    preferencesChanged();
+  });
+  Future<void> setReminderTime(int id, int minutes) => db.exclusive(() async {
+    final index = reminderIds.indexOf(id);
+    if (index < 0 || !validReminderMinute(index, minutes)) {
+      throw ArgumentError('Orario fuori dalla fascia selezionata');
+    }
+    final current = await settings.read();
+    final times = current.reminderMinutes.toList()..[index] = minutes;
+    await repository.beforeMutation?.call();
+    await db.transaction(
+      () => settings.writeInsideTransaction(
+        current.copyWith(reminderMinutes: times),
+      ),
+    );
+    await applyReminders(current.reminders);
     preferencesChanged();
   });
 }
@@ -214,19 +237,9 @@ final backupServiceProvider = FutureProvider<BackupService>((ref) async {
   final repository = await ref.watch(measurementRepositoryProvider.future);
   return BackupService(
     repository,
-    readReminders: () async {
-      final status = await AndroidDocumentFileService.channel
-          .invokeMapMethod<String, dynamic>('reminderStatus');
-      return (status!['slots'] as List)
-          .map((s) => (s as Map)['enabled'] == true)
-          .toList();
-    },
-    applyReminders: (values) async {
-      await AndroidDocumentFileService.channel.invokeMethod(
-        'applyReminderPreferences',
-        {'enabled': values},
-      );
-    },
+    readReminders: () async =>
+        (await SettingsRepository(repository.db).read()).reminders.toList(),
+    applyReminders: (_) => ReminderSync(repository).apply(),
     preferencesChanged: () => ref.invalidate(appSettingsProvider),
   );
 });

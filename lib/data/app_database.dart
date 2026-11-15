@@ -47,7 +47,7 @@ class AppDatabase extends GeneratedDatabase {
     );
   }
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
   Future<void>? _writeTail;
   bool maintenance = false;
   Future<T> write<T>(Future<T> Function() action) {
@@ -89,14 +89,16 @@ class AppDatabase extends GeneratedDatabase {
       await customStatement(measurementV1);
       await _upgradeV1();
       await _upgradeV2();
+      await _upgradeV3();
     }),
     onUpgrade: (_, from, to) async {
-      if (from < 1 || from > 2 || to != 3) {
+      if (from < 1 || from > 3 || to != 4) {
         throw const ArchiveUnavailable('unsupported-schema');
       }
       await transaction(() async {
         if (from == 1) await _upgradeV1();
-        await _upgradeV2();
+        if (from < 3) await _upgradeV2();
+        await _upgradeV3();
       });
     },
     beforeOpen: (details) async {
@@ -139,6 +141,20 @@ class AppDatabase extends GeneratedDatabase {
     await customStatement(
       'CREATE TABLE archive_operation (id TEXT PRIMARY KEY, state TEXT NOT NULL CHECK(state IN (\'prepared\',\'committed\')), recovery TEXT NOT NULL, recovery_hash TEXT NOT NULL, staging TEXT NOT NULL)',
     );
+  }
+
+  Future<void> _upgradeV3() async {
+    for (final (name, minutes) in [
+      ('morning', 600),
+      ('afternoon', 960),
+      ('evening', 1260),
+    ]) {
+      await customStatement(
+        'ALTER TABLE app_settings ADD COLUMN reminder_${name}_minutes INTEGER NOT NULL DEFAULT $minutes CHECK(reminder_${name}_minutes BETWEEN 0 AND 1439)',
+      );
+    }
+    // Retain the legacy column for conservative migration; it no longer controls UI.
+    await customStatement('UPDATE app_settings SET opaque=0');
   }
 
   /// SQLite itself rolls back an interrupted import. Never roll back a committed restore.

@@ -217,6 +217,7 @@ class AnalyticsPage extends ConsumerStatefulWidget {
 class _AnalyticsPageState extends ConsumerState<AnalyticsPage> {
   int _days = 7, _shown = 20;
   CivilPeriod? _custom;
+  bool _all = false;
   DayBand? _band;
   String? _selectedId, _selectedDay;
   Future<void> _pick() async {
@@ -232,6 +233,7 @@ class _AnalyticsPageState extends ConsumerState<AnalyticsPage> {
     );
     if (range != null && mounted) {
       setState(() {
+        _all = false;
         _custom = CivilPeriod(dateKey(range.start), dateKey(range.end));
         _shown = 20;
         _selectedId = null;
@@ -249,9 +251,9 @@ class _AnalyticsPageState extends ConsumerState<AnalyticsPage> {
           dateKey(DateTime.utc(now.year, now.month, now.day - _days + 1)),
           dateKey(now),
         );
-    final readings = ref.watch(
-      periodReadingsProvider((period.start, period.end)),
-    );
+    final readings = _all
+        ? ref.watch(measurementsProvider)
+        : ref.watch(periodReadingsProvider((period.start, period.end)));
     return readings.when(
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (_, _) => ListView(
@@ -264,7 +266,14 @@ class _AnalyticsPageState extends ConsumerState<AnalyticsPage> {
         ],
       ),
       data: (rows) {
-        final data = AnalyticsData(rows, period: period, band: _band);
+        final selectedRows = rows
+            .where((r) => _band == null || r.band == _band)
+            .toList();
+        final dates = selectedRows.map((r) => r.localDate).toList()..sort();
+        final shownPeriod = _all && dates.isNotEmpty
+            ? CivilPeriod(dates.first, dates.last)
+            : period;
+        final data = AnalyticsData(rows, period: shownPeriod, band: _band);
         final selected = data.rows
             .where(
               (r) => _selectedDay != null
@@ -296,8 +305,9 @@ class _AnalyticsPageState extends ConsumerState<AnalyticsPage> {
                       for (final days in [7, 30, 90])
                         ChoiceChip(
                           label: Text('$days giorni'),
-                          selected: _custom == null && _days == days,
+                          selected: !_all && _custom == null && _days == days,
                           onSelected: (_) => setState(() {
+                            _all = false;
                             _days = days;
                             _custom = null;
                             _shown = 20;
@@ -305,13 +315,28 @@ class _AnalyticsPageState extends ConsumerState<AnalyticsPage> {
                             _selectedDay = null;
                           }),
                         ),
+                      ChoiceChip(
+                        label: const Text('Tutte le misurazioni'),
+                        selected: _all,
+                        onSelected: (_) => setState(() {
+                          _all = true;
+                          _custom = null;
+                          _shown = 20;
+                          _selectedId = null;
+                          _selectedDay = null;
+                        }),
+                      ),
                       ActionChip(
                         label: const Text('Intervallo personalizzato'),
                         onPressed: _pick,
                       ),
                     ],
                   ),
-                  Text('${period.start} – ${period.end}'),
+                  Text(
+                    _all && dates.isEmpty
+                        ? 'Archivio senza letture per questo filtro'
+                        : '${shownPeriod.start} – ${shownPeriod.end}',
+                  ),
                   const SizedBox(height: 12),
                   Wrap(
                     spacing: 8,

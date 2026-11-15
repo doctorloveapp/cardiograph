@@ -1,3 +1,4 @@
+import '../features/reminders/reminder_sync.dart';
 import '../features/settings/about_page.dart';
 import '../features/backup/backup_service.dart';
 import '../features/backup/backup_settings.dart';
@@ -52,6 +53,12 @@ GoRouter createRouter() => GoRouter(
       builder: (c, s) => const NotificationMeasurementPage(),
     ),
     GoRoute(path: '/about', builder: (c, s) => const AboutPage()),
+    GoRoute(path: '/guide', builder: (c, s) => const GuidePage()),
+    GoRoute(
+      path: '/settings/reminders',
+      builder: (c, s) => reminderSettingsPage(),
+    ),
+    GoRoute(path: '/settings/backup', builder: (c, s) => backupSettingsPage()),
     GoRoute(path: '/settings', builder: (c, s) => const SettingsPage()),
     GoRoute(path: '/capture', builder: (c, s) => const CameraPage()),
     GoRoute(
@@ -116,6 +123,9 @@ class _CardioGraphAppState extends ConsumerState<CardioGraphApp>
       // the fence. That is not a failed restore or pending reconciliation.
       if (service.db.maintenance) return;
       final done = await service.recover();
+      await service.db.exclusive(
+        () => ReminderSync(service.repository).apply(),
+      );
       if (mounted) ref.read(recoveryWarningProvider.notifier).set(!done);
     } catch (_) {
       if (mounted) ref.read(recoveryWarningProvider.notifier).set(true);

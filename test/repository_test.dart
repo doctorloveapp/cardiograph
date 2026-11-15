@@ -160,7 +160,7 @@ void main() {
     },
   );
   test(
-    'Migrazione reale v1 → v3 conserva ID, istanti e campi esistenti',
+    'Migrazione reale v1 → v4 conserva ID, istanti e campi esistenti',
     () async {
       final directory = await Directory.systemTemp.createTemp(
         'cardiograph-migration-',
@@ -199,7 +199,7 @@ void main() {
               .data
               .values
               .single,
-          3,
+          4,
         );
       } finally {
         await migratedRepo.close();

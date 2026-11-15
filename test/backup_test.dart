@@ -226,11 +226,11 @@ void main() {
       ((legacy['readings'] as List).first as Map)
         ..remove('note')
         ..remove('originalCapturedAtUtc');
-      (legacy['preferences'] as Map).remove('opaque');
+      (legacy['preferences'] as Map).remove('reminderMinutes');
       final migrated = BackupArchive.validate(legacy);
       expect(migrated.rows.single.note, '');
       expect(migrated.settings.opaque, isFalse);
-      expect(migrated.payload['schemaVersion'], 2);
+      expect(migrated.payload['schemaVersion'], 3);
     },
   );
   test(
@@ -426,7 +426,7 @@ void main() {
           ],
           child: MaterialApp(
             theme: appTheme(false),
-            home: const GlassBackdrop(child: SettingsPage()),
+            home: GlassBackdrop(child: backupSettingsPage()),
           ),
         ),
       );
