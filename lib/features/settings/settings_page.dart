@@ -20,19 +20,25 @@ class SettingsPage extends StatelessWidget {
           ('Info', Icons.info_outline, '/about'),
         ]) ...[
           GlassCard(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
             child: ListTile(
               contentPadding: EdgeInsets.zero,
-              minVerticalPadding: 14,
-              leading: Icon(item.$2, size: 30),
+              minVerticalPadding: 8,
+              minTileHeight: 56,
+              horizontalTitleGap: 14,
+              leading: Icon(item.$2, size: 24),
               title: Text(
                 item.$1,
-                style: Theme.of(context).textTheme.titleLarge,
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
-              trailing: const Icon(Icons.chevron_right),
+              trailing: const Icon(Icons.chevron_right, size: 20),
               onTap: () => context.push(item.$3),
             ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 12),
         ],
       ],
     ),

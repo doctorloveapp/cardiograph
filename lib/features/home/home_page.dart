@@ -6,7 +6,6 @@ import '../../app/providers.dart';
 import '../../core/design_system/components.dart';
 import '../../core/time/measurement_time.dart';
 import '../../core/design_system/theme.dart';
-import '../measurements/measurement_choice.dart';
 import '../measurements/diary.dart';
 
 class HomePage extends ConsumerWidget {
@@ -49,9 +48,9 @@ class HomePage extends ConsumerWidget {
                       label: 'Nuova misurazione',
                       button: true,
                       excludeSemantics: true,
-                      onTap: () => showMeasurementChoice(context),
+                      onTap: () => context.push('/capture'),
                       child: InkWell(
-                        onTap: () => showMeasurementChoice(context),
+                        onTap: () => context.push('/capture'),
                         borderRadius: BorderRadius.circular(24),
                         child: Padding(
                           padding: const EdgeInsets.all(8),

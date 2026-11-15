@@ -38,7 +38,12 @@ class GlassSheet extends StatelessWidget {
 
 class GlassCard extends StatelessWidget {
   final Widget child;
-  const GlassCard({super.key, required this.child});
+  final EdgeInsetsGeometry padding;
+  const GlassCard({
+    super.key,
+    required this.child,
+    this.padding = const EdgeInsets.all(24),
+  });
   @override
   Widget build(BuildContext context) {
     final opaque = Theme.of(context).extension<SurfaceStyle>()!.opaque;
@@ -68,7 +73,7 @@ class GlassCard extends StatelessWidget {
           ),
           child: Container(
             width: double.infinity,
-            padding: const EdgeInsets.all(24),
+            padding: padding,
             decoration: BoxDecoration(
               color: opaque ? Colors.white : null,
               gradient: opaque

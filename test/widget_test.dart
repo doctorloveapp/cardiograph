@@ -45,8 +45,6 @@ void main() {
     }
     await tester.tap(find.text('Nuova misurazione'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Scatta foto'));
-    await tester.pumpAndSettle();
     expect(find.text('Inquadra i tre valori'), findsOneWidget);
     await tester.tap(find.byType(BackButton));
     await tester.pumpAndSettle();

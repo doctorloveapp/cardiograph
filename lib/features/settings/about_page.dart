@@ -136,7 +136,7 @@ class GuidePage extends StatelessWidget {
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
               Text(
-                'Premi + e scegli Foto o Manuale. Inquadra i tre valori, evita i riflessi e tocca per mettere a fuoco. Controlla sempre massima, minima, pulsazioni e orario nella revisione prima di salvare. Se necessario regola il ritaglio o inserisci i valori a mano.',
+                'Premi + per aprire subito la fotocamera. Per la compilazione manuale premi Inserisci a mano nella stessa schermata. Inquadra i tre valori, evita i riflessi e tocca per mettere a fuoco. Controlla sempre massima, minima, pulsazioni e orario nella revisione prima di salvare. Se necessario regola il ritaglio o inserisci i valori a mano.',
               ),
               SizedBox(height: 16),
               Text(
