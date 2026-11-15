@@ -364,7 +364,7 @@ void main() {
       expect(repo.dayQueries, 2);
       expect(t.getSemantics(day).label, contains('Sera 1'));
       expect(t.getSemantics(day).label, contains('28 febbraio 2024'));
-      expect(t.getSemantics(day).label, contains('1 misurazioni'));
+      expect(t.getSemantics(day).label, contains('1 misurazione'));
       final before = t
           .widget<Text>(find.byKey(const ValueKey('selected-calendar-day')))
           .data;

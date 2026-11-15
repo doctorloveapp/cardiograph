@@ -1,3 +1,4 @@
+import '../features/settings/about_page.dart';
 import '../features/backup/backup_service.dart';
 import '../features/backup/backup_settings.dart';
 import '../core/design_system/components.dart';
@@ -50,6 +51,7 @@ GoRouter createRouter() => GoRouter(
       path: '/new-measurement',
       builder: (c, s) => const NotificationMeasurementPage(),
     ),
+    GoRoute(path: '/about', builder: (c, s) => const AboutPage()),
     GoRoute(path: '/settings', builder: (c, s) => const SettingsPage()),
     GoRoute(path: '/capture', builder: (c, s) => const CameraPage()),
     GoRoute(
@@ -110,6 +112,9 @@ class _CardioGraphAppState extends ConsumerState<CardioGraphApp>
     try {
       final service = await ref.read(backupServiceProvider.future);
       if (!mounted) return;
+      // Permission dialogs can resume the app while a preference write holds
+      // the fence. That is not a failed restore or pending reconciliation.
+      if (service.db.maintenance) return;
       final done = await service.recover();
       if (mounted) ref.read(recoveryWarningProvider.notifier).set(!done);
     } catch (_) {

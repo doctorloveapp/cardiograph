@@ -1,3 +1,4 @@
+import '../../core/text/italian.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -159,10 +160,43 @@ class _DiaryPageState extends ConsumerState<DiaryPage> {
                         ),
                       ],
                     ),
-                  Text('${stats.count} letture · ${stats.days} giorni'),
+                  Text(
+                    '${countNoun(stats.count, 'lettura', 'letture')} · ${countNoun(stats.days, 'giorno', 'giorni')}',
+                  ),
                   if (stats.count > 0)
-                    Text(
-                      'Medie: ${stats.systolic.mean!.toStringAsFixed(1)} / ${stats.diastolic.mean!.toStringAsFixed(1)} mmHg · ${stats.pulse.mean!.toStringAsFixed(1)} bpm',
+                    Text.rich(
+                      TextSpan(
+                        children: [
+                          const TextSpan(text: 'Medie: '),
+                          TextSpan(
+                            text: stats.systolic.mean!.toStringAsFixed(1),
+                            style: TextStyle(
+                              color: systolicHigh(stats.systolic.mean!)
+                                  ? Theme.of(context).colorScheme.error
+                                  : null,
+                            ),
+                          ),
+                          const TextSpan(text: ' / '),
+                          TextSpan(
+                            text: stats.diastolic.mean!.toStringAsFixed(1),
+                            style: TextStyle(
+                              color: diastolicHigh(stats.diastolic.mean!)
+                                  ? Theme.of(context).colorScheme.error
+                                  : null,
+                            ),
+                          ),
+                          const TextSpan(text: ' mmHg · '),
+                          TextSpan(
+                            text: stats.pulse.mean!.toStringAsFixed(1),
+                            style: TextStyle(
+                              color: pulseHigh(stats.pulse.mean!)
+                                  ? Theme.of(context).colorScheme.error
+                                  : null,
+                            ),
+                          ),
+                          const TextSpan(text: ' bpm'),
+                        ],
+                      ),
                     ),
                   const SizedBox(height: 16),
                   if (rows.isEmpty)

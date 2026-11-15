@@ -1,3 +1,4 @@
+import '../../core/text/italian.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -143,7 +144,7 @@ class _ReportsPageState extends ConsumerState<ReportsPage> {
         builder: (c) => GlassDialog(
           title: const Text('Riepilogo report'),
           content: Text(
-            '${snapshot.period.label}\n${snapshot.rows.length} letture\nIntestazione: ${snapshot.heading.isEmpty ? 'Nessuna' : snapshot.heading}',
+            '${snapshot.period.label}\n${countNoun(snapshot.rows.length, 'lettura', 'letture')}\nIntestazione: ${snapshot.heading.isEmpty ? 'Nessuna' : snapshot.heading}',
           ),
           actions: [
             TextButton(

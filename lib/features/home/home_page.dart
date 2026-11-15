@@ -1,3 +1,4 @@
+import '../../core/text/italian.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -115,7 +116,7 @@ class HomePage extends ConsumerWidget {
             ),
             const SizedBox(height: 24),
             Text(
-              'Oggi · ${today.length} misurazioni',
+              'Oggi · ${countNoun(today.length, 'misurazione', 'misurazioni')}',
               style: Theme.of(context).textTheme.titleLarge,
             ),
             const SizedBox(height: 12),
@@ -127,7 +128,7 @@ class HomePage extends ConsumerWidget {
                     Expanded(
                       child: Semantics(
                         label:
-                            '${band.label}: ${today.where((m) => m.band.index == band.index).length} misurazioni',
+                            '${band.label}: ${countNoun(today.where((m) => m.band.index == band.index).length, 'misurazione', 'misurazioni')}',
                         excludeSemantics: true,
                         child: Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 3),

@@ -40,6 +40,7 @@ android {
     }
     buildTypes {
         release {
+            ndk { abiFilters.clear(); abiFilters.add("arm64-v8a") }
             signingConfig = signingConfigs.getByName("danKing")
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }

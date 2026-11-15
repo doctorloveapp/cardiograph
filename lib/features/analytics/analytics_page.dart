@@ -1,3 +1,4 @@
+import '../../core/text/italian.dart';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -184,7 +185,7 @@ LineChartData metricChart(
               d = descriptors[s.barIndex];
           final row = observation.originals.first;
           final date = observation.daily
-              ? '${observation.day} · ${observation.originals.length} letture'
+              ? '${observation.day} · ${countNoun(observation.originals.length, 'lettura', 'letture')}'
               : '${row.localDate} ${row.localTime}\n${row.zone} · UTC${row.offsetMinutes >= 0 ? '+' : '-'}${(row.offsetMinutes.abs() ~/ 60).toString().padLeft(2, '0')}:${(row.offsetMinutes.abs() % 60).toString().padLeft(2, '0')}';
           return LineTooltipItem(
             '$date\n${d.$1.label}${data.aggregated ? ' · ${['media', 'min', 'max'][d.$2]}' : ''}: ',
@@ -351,7 +352,7 @@ class _AnalyticsPageState extends ConsumerState<AnalyticsPage> {
                     Semantics(
                       liveRegion: true,
                       child: Text(
-                        '${data.stats.count} letture · ${data.stats.days} giorni con dati',
+                        '${countNoun(data.stats.count, 'lettura', 'letture')} · ${countNoun(data.stats.days, 'giorno', 'giorni')} con dati',
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -413,7 +414,7 @@ class _AnalyticsPageState extends ConsumerState<AnalyticsPage> {
                               const SizedBox(height: 16),
                               Semantics(
                                 label:
-                                    '${metrics.length == 2 ? 'Grafico pressione' : 'Grafico pulsazioni'}, ${data.stats.count} letture. Riepilogo e letture originali disponibili sotto.',
+                                    '${metrics.length == 2 ? 'Grafico pressione' : 'Grafico pulsazioni'}, ${countNoun(data.stats.count, 'lettura', 'letture')}. Riepilogo e letture originali disponibili sotto.',
                                 child: SizedBox(
                                   height: 270,
                                   child: LineChart(
@@ -452,7 +453,7 @@ class _AnalyticsPageState extends ConsumerState<AnalyticsPage> {
                         child: const Text('Mostra tutte le letture'),
                       ),
                     Text(
-                      '$count di ${originals.length} letture · tocca Apri lettura per dettaglio e modifica',
+                      '$count di ${countNoun(originals.length, 'lettura', 'letture')} · tocca Apri lettura per dettaglio e modifica',
                     ),
                   ],
                 ],

@@ -379,13 +379,6 @@ class _ManualEditorState extends ConsumerState<ManualEditor> {
                   textInputAction: i == 2
                       ? TextInputAction.done
                       : TextInputAction.next,
-                  onFieldSubmitted: (_) {
-                    if (i < 2) {
-                      FocusScope.of(context).nextFocus();
-                    } else {
-                      FocusScope.of(context).unfocus();
-                    }
-                  },
                   style: const TextStyle(
                     fontSize: 32,
                     fontWeight: FontWeight.w600,

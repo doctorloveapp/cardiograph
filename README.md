@@ -2,7 +2,7 @@
   <img src="assets/logo.png" alt="CardioGraph" width="112" />
   <h1>CardioGraph</h1>
   <p>Diario pressorio locale per Android.</p>
-  <a href="pubspec.yaml"><img alt="Versione" src="https://img.shields.io/badge/versione-0.1.0--dev-1261C9?style=flat-square" /></a>
+  <a href="pubspec.yaml"><img alt="Versione" src="https://img.shields.io/badge/versione-1.1.0-1261C9?style=flat-square" /></a>
   <a href="#prerequisiti"><img alt="Android API 26+" src="https://img.shields.io/badge/Android-8.0%2B%20(API%2026%2B)-08D8BF?style=flat-square&logo=android&logoColor=white" /></a>
   <a href="https://flutter.dev/"><img alt="Flutter" src="https://img.shields.io/badge/Flutter-3.38.5-02569B?style=flat-square&logo=flutter" /></a>
   <img alt="Sviluppatore" src="https://img.shields.io/badge/sviluppatore-Dan%20King-142D4E?style=flat-square" />
@@ -11,7 +11,7 @@
 
 ## Il progetto
 
-CardioGraph è un diario Flutter per Android dedicato a pressione e pulsazioni, senza account o servizi remoti. La versione 0.1.0-dev include archivio cifrato, acquisizione fotografica con revisione, consultazione, report PDF e backup portabili. Il primo avvio parte senza dati dimostrativi. Il manifest release non richiede accesso a Internet; i badge di questa pagina sono risorse esterne del solo README.
+CardioGraph è un diario Flutter per Android dedicato a pressione e pulsazioni, senza account o servizi remoti. La versione 1.1.0 include archivio cifrato, acquisizione fotografica con revisione, consultazione, report PDF e backup portabili. Il primo avvio parte senza dati dimostrativi. Il manifest release non richiede accesso a Internet; i badge di questa pagina sono risorse esterne del solo README.
 
 ## Funzionalità
 
@@ -21,7 +21,7 @@ CardioGraph è un diario Flutter per Android dedicato a pressione e pulsazioni, 
 | CameraX e OCR a sette segmenti con revisione obbligatoria | Disponibile; regressione locale 6/6 foto, validazione sul campo da estendere |
 | Grafici, statistiche e calendario italiano | Disponibili sui dati reali |
 | Report PDF offline multipagina, anteprima e SAF | Disponibili; autore PDF vuoto |
-| Promemoria locali 10:00 / 16:00 / 21:00 | Disponibili; collaudo prolungato Doze/riavvio ancora aperto |
+| Promemoria locali 10:00 / 16:00 / 21:00 | Disponibili; Doze breve, riavvio e cambio ora/fuso verificati su emulatore |
 | Backup .cardiograph e ripristino con sostituzione atomica | Disponibili, standard senza password o cifrati su scelta dell’utente |
 | Glass/3D, footer con selezione bianca, modalità opaca persistente | Disponibili |
 
@@ -82,17 +82,29 @@ Dalla radice, su questo ambiente Windows:
 & 'C:\Users\hp_wi\Downloads\GEMINI~1\flutter\bin\flutter.bat' pub get --enforce-lockfile
 & 'C:\Users\hp_wi\Downloads\GEMINI~1\flutter\bin\flutter.bat' analyze
 & 'C:\Users\hp_wi\Downloads\GEMINI~1\flutter\bin\flutter.bat' test
-& 'C:\Users\hp_wi\Downloads\GEMINI~1\flutter\bin\flutter.bat' build apk --release --no-pub --target-platform android-arm64,android-x64
+& 'C:\Users\hp_wi\Downloads\GEMINI~1\flutter\bin\flutter.bat' build apk --release --target-platform android-arm64 --obfuscate --split-debug-info=output/symbols/1.1.0+2
 ```
 
 Il percorso breve evita il problema Windows dei native hooks con spazi. Su altre macchine configurare uno SDK compatibile e un percorso locale adeguato; non versionare local.properties.
 
 ### Firma release
 
-Application ID e namespace: **dev.danking.cardiograph**. La configurazione legge `secrets/android/key.properties`, con `storeFile`, `storePassword`, `keyAlias` e `keyPassword`. Keystore e credenziali restano esclusi da Git. La release usa il certificato Dan King già disponibile per le prove; la chiave definitiva di distribuzione va gestita nel rilascio. Nessun ripiego sulla firma debug.
+Application ID e namespace: **dev.danking.cardiograph**. La configurazione legge `secrets/android/key.properties`, con `storeFile`, `storePassword`, `keyAlias` e `keyPassword`. Keystore e credenziali restano esclusi da Git. La release usa il certificato Dan King già impiegato negli aggiornamenti; conservare la stessa chiave per mantenere la continuità delle installazioni. Nessun ripiego sulla firma debug.
 
-APK: `build/app/outputs/flutter-apk/app-release.apk`. Per verificarlo usare `apksigner verify --verbose --print-certs` degli Android Build Tools.
+Versione Android: **1.1.0 (build 2)**. Artefatto finale: **APK arm64 offuscata**, `build/app/outputs/flutter-apk/app-release.apk`. Conservare separatamente i simboli in `output/symbols/1.1.0+2` per `flutter symbolize`; non incorporarli nell’APK. Per verificarlo usare `apksigner verify --verbose --print-certs` degli Android Build Tools.
 
-## Avanzamento
+## Verifica e limiti noti
 
-Il riferimento operativo è [piano_fasi.md](piano_fasi.md): aggiornare le caselle soltanto dopo verifiche effettive. I test automatici e il collaudo Samsung sono riportati nel piano; matrice dispositivi, Doze/riavvio prolungato, accessibilità estesa e prestazioni sul dispositivo minimo restano attività di validazione.
+Versione **1.1.0+2**, solo arm64. Analisi statica pulita e **68 test Flutter** superati, inclusi OCR locale 6/6, migrazioni, perdita chiave, backup e rollback. Installazione pulita su emulatore Android 16/API 36; aggiornamenti sul Samsung S23 Android 17/API 37 senza cancellare le misurazioni. Backup cifrato provato dalla UI su dati sintetici; PDF verificato anche in Adobe Acrobat. TalkBack collegato e testo 200% verificati; audit vocale umano esteso ancora da completare.
+
+Stress isolato in profile con 10.000/50.000 letture: query mensile p95 **11,7/258,7 ms**, Home da widget montato con DB aperto **1,28 s**, Argon2id+AES per due letture **794 ms** sull’emulatore Windows con GPU host. Non sono misure di avvio a freddo o prestazioni sul telefono minimo. SwiftShader ha provocato crash del processo QEMU; il test è terminato con GPU host. Il budget frame ≥95% a 60 Hz resta da validare su hardware reale di riferimento.
+
+Promemoria verificati su emulatore con Doze breve, reboot senza aprire l’app, cambio ora/fuso e revoca precisione. Restano da estendere durata e matrice produttori. L’OCR richiede sempre revisione manuale: sei foto note non garantiscono affidabilità su altri misuratori o condizioni. PDF limitati a 10.000 letture per documento; backup a 64 MiB/100.000 letture.
+
+## Installazione e manutenzione
+
+Per aggiornare un’installazione esistente usare `adb install -r build/app/outputs/flutter-apk/app-release.apk`, con lo stesso applicationId e certificato. Non disinstallare né cancellare i dati; creare prima un backup portabile. L’installazione pulita è riservata a un emulatore o dispositivo senza dati da conservare.
+
+Conservare privatamente keystore, credenziali e simboli Dart in `output/symbols/1.1.0+2`; archiviare anche il mapping R8 della stessa build. Per un errore dopo il rilascio preferire un aggiornamento correttivo con versionCode superiore e migrazione compatibile. Il downgrade non è una procedura di recupero garantita; il ripristino del diario richiede un backup valido e conferma sostitutiva. Nessun AAB viene prodotto per questa consegna.
+
+Il riferimento operativo è [piano_fasi.md](piano_fasi.md), con prove effettive e verifiche ancora aperte.

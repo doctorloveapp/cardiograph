@@ -128,6 +128,19 @@ void main() {
     }
     expect(await MeasurementRepository(db).list(), isEmpty);
   });
+  testWidgets('Tasto Avanti passa dalla massima alla minima senza saltarla', (
+    t,
+  ) async {
+    await editor(t);
+    await t.tap(find.byKey(const ValueKey('reading-0')));
+    await t.testTextInput.receiveAction(TextInputAction.next);
+    await t.pump();
+    final field = find.descendant(
+      of: find.byKey(const ValueKey('reading-1')),
+      matching: find.byType(EditableText),
+    );
+    expect(t.widget<EditableText>(field).focusNode.hasFocus, isTrue);
+  });
   testWidgets('Massima <= minima richiede conferma e non scambia campi', (
     t,
   ) async {

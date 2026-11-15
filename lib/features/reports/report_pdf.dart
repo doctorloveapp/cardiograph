@@ -1,3 +1,4 @@
+import '../../core/text/italian.dart';
 import 'dart:math' as math;
 import 'dart:typed_data';
 import 'package:pdf/pdf.dart';
@@ -171,7 +172,10 @@ Future<Uint8List> buildReportPdf(
         pw.SizedBox(height: 12),
         _chart(s, [Metric.pulse], text),
         pw.NewPage(),
-        text('Elenco completo · ${s.rows.length} letture', size: 13),
+        text(
+          'Elenco completo · ${countNoun(s.rows.length, 'lettura', 'letture')}',
+          size: 13,
+        ),
         if (s.showOffsets)
           text(
             'Orari locali registrati; offset UTC riportato per distinguere i fusi.',

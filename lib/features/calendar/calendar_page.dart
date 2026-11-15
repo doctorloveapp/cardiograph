@@ -1,3 +1,4 @@
+import '../../core/text/italian.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:table_calendar/table_calendar.dart';
@@ -45,7 +46,7 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
   Widget _cell(DateTime day, Map<String, CalendarDaySummary> summaries) {
     final value = summaries[dateKey(day)], selected = isSameDay(day, _selected);
     final label =
-        '${value?.count ?? 0} misurazioni${value?.elevated == true ? ', ${value!.highCount} oltre soglia' : ''}. Mattina ${value?.morning ?? 0}, Pomeriggio ${value?.afternoon ?? 0}, Sera ${value?.evening ?? 0}';
+        '${countNoun(value?.count ?? 0, 'misurazione', 'misurazioni')}${value?.elevated == true ? ', ${value!.highCount} oltre soglia' : ''}. Mattina ${value?.morning ?? 0}, Pomeriggio ${value?.afternoon ?? 0}, Sera ${value?.evening ?? 0}';
     return Semantics(
       key: ValueKey('calendar-${dateKey(day)}'),
       label: label,

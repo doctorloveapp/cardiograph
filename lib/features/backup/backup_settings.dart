@@ -1,3 +1,4 @@
+import '../../core/text/italian.dart';
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -170,7 +171,9 @@ class _BackupSettingsState extends ConsumerState<BackupSettings> {
         .save('CardioGraph_$stamp.cardiograph', bytes);
     if (saved) {
       await service.markSuccessfulBackup(now);
-      _message('Backup salvato · ${archive.rows.length} letture');
+      _message(
+        'Backup salvato · ${countNoun(archive.rows.length, 'lettura', 'letture')}',
+      );
     } else {
       _message('Esportazione annullata');
     }
@@ -205,7 +208,7 @@ class _BackupSettingsState extends ConsumerState<BackupSettings> {
     _message(
       outcome.remindersPending
           ? 'Archivio ripristinato. Riconciliazione promemoria da completare.'
-          : 'Archivio ripristinato · ${archive.rows.length} letture',
+          : 'Archivio ripristinato · ${countNoun(archive.rows.length, 'lettura', 'letture')}',
     );
   }
 
@@ -216,7 +219,7 @@ class _BackupSettingsState extends ConsumerState<BackupSettings> {
         builder: (c) => GlassDialog(
           title: const Text('Sostituisci l’archivio'),
           content: Text(
-            '${archive.rows.length} letture${archive.firstDate == null ? '' : '\n${archive.firstDate} – ${archive.lastDate}'}\n\nIl ripristino sostituirà tutte le letture e le preferenze portabili correnti. Esporta prima una copia dell’archivio attuale.',
+            '${countNoun(archive.rows.length, 'lettura', 'letture')}${archive.firstDate == null ? '' : '\n${archive.firstDate} – ${archive.lastDate}'}\n\nIl ripristino sostituirà tutte le letture e le preferenze portabili correnti. Esporta prima una copia dell’archivio attuale.',
           ),
           actions: [
             TextButton(
@@ -251,7 +254,7 @@ class _BackupSettingsState extends ConsumerState<BackupSettings> {
       builder: (c) => GlassDialog(
         title: const Text('Cancella tutti i dati'),
         content: Text(
-          'Sono presenti ${current.rows.length} letture. Verranno cancellate insieme alle preferenze dell’app. I backup già esportati rimarranno nei percorsi scelti. Vuoi esportare prima un backup?',
+          'Archivio attuale: ${countNoun(current.rows.length, 'lettura', 'letture')}. La cancellazione rimuoverà tutte le letture e le preferenze dell’app. I backup già esportati rimarranno nei percorsi scelti. Vuoi esportare prima un backup?',
         ),
         actions: [
           TextButton(

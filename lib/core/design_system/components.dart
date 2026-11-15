@@ -66,7 +66,8 @@ class GlassCard extends StatelessWidget {
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(Brand.cardRadius),
-        child: BackdropFilter(
+        child: BackdropFilter.grouped(
+          enabled: !opaque,
           filter: ImageFilter.blur(
             sigmaX: opaque ? 0 : Brand.blur,
             sigmaY: opaque ? 0 : Brand.blur,
@@ -120,7 +121,7 @@ class GlassBackdrop extends StatelessWidget {
         stops: [0, .4, .73, 1],
       ),
     ),
-    child: child,
+    child: BackdropGroup(child: child),
   );
 }
 

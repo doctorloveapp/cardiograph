@@ -1,3 +1,4 @@
+import '../../app/version.dart';
 import 'dart:convert';
 import 'dart:typed_data';
 import 'dart:math';
@@ -430,7 +431,7 @@ Future<Uint8List> encodeBackup(
   final h = <String, dynamic>{
     'magic': 'CardioGraphBackup',
     'formatVersion': 1,
-    'appVersion': '0.1.0-dev',
+    'appVersion': AppVersion.name,
     'createdAtUtc': now.toUtc().toIso8601String(),
     'protection': passphrase == null ? 'none' : 'aes256gcm',
   };

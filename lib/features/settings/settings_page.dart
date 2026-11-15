@@ -54,8 +54,13 @@ class SettingsPage extends ConsumerWidget {
         const SizedBox(height: 20),
         const ReminderSettings(),
         const SizedBox(height: 24),
-        const Text(
-          'CardioGraph · 0.1.0-dev\nSviluppatore: Dan King\nUn diario personale, senza account.',
+        ListTile(
+          contentPadding: EdgeInsets.zero,
+          leading: const Icon(Icons.info_outline),
+          title: const Text('Informazioni & Guida'),
+          subtitle: const Text('CardioGraph 1.1.0 (build 2)'),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () => context.push('/about'),
         ),
       ],
     ),
