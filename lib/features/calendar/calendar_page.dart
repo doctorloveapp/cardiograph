@@ -89,16 +89,25 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
                     ].asMap().entries)
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 1),
-                        child: Container(
-                          width: 6,
-                          height: 6,
-                          decoration: BoxDecoration(
-                            color: band.value > 0
-                                ? [Brand.blue, Brand.ink, Brand.navy][band.key]
-                                : Colors.transparent,
-                            shape: band.key == 1
-                                ? BoxShape.rectangle
-                                : BoxShape.circle,
+                        child: ClipPath(
+                          clipper: band.key == 2
+                              ? const _EveningMarkerClipper()
+                              : null,
+                          child: Container(
+                            width: 6,
+                            height: 6,
+                            decoration: BoxDecoration(
+                              color: band.value > 0
+                                  ? [
+                                      Brand.blue,
+                                      Brand.ink,
+                                      Brand.navy,
+                                    ][band.key]
+                                  : Colors.transparent,
+                              shape: band.key == 0
+                                  ? BoxShape.circle
+                                  : BoxShape.rectangle,
+                            ),
                           ),
                         ),
                       ),
@@ -212,7 +221,7 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
               ),
               const SizedBox(height: 12),
               const Text(
-                'Indicatori da sinistra: ● Mattina · ■ Pomeriggio · ● Sera. Il numero piccolo indica quante letture contiene il giorno.',
+                'Indicatori da sinistra: ● Mattina · ■ Pomeriggio · ▲ Sera. Il numero piccolo indica quante letture contiene il giorno.',
               ),
               const SizedBox(height: 20),
               Text(
@@ -262,4 +271,16 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
       },
     );
   }
+}
+
+class _EveningMarkerClipper extends CustomClipper<Path> {
+  const _EveningMarkerClipper();
+  @override
+  Path getClip(Size size) => Path()
+    ..moveTo(size.width / 2, 0)
+    ..lineTo(size.width, size.height)
+    ..lineTo(0, size.height)
+    ..close();
+  @override
+  bool shouldReclip(_EveningMarkerClipper oldClipper) => false;
 }

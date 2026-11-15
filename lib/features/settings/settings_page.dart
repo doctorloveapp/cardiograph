@@ -15,6 +15,7 @@ class SettingsPage extends StatelessWidget {
         for (final item in [
           ('Promemoria', Icons.notifications_outlined, '/settings/reminders'),
           ('Backup e dati', Icons.backup_outlined, '/settings/backup'),
+          ('Guida breve', Icons.menu_book_outlined, '/guide'),
           ('Info', Icons.info_outline, '/about'),
         ]) ...[
           GlassCard(

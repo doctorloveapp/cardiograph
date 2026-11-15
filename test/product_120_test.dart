@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:cardiograph/app/app.dart';
 import 'package:cardiograph/app/providers.dart';
 import 'package:cardiograph/app/version.dart';
+import 'package:cardiograph/core/design_system/components.dart';
+import 'package:cardiograph/core/design_system/theme.dart';
 import 'package:cardiograph/core/services/platform_services.dart';
 import 'package:cardiograph/data/app_database.dart';
 import 'package:cardiograph/data/providers.dart';
@@ -272,16 +274,28 @@ void main() {
     },
   );
   testWidgets(
-    'Impostazioni: esattamente tre accessi e Info con asset/link browser',
+    'Impostazioni: quattro accessi ordinati e Info con asset/link browser',
     (t) async {
       await t.pumpWidget(app());
       await t.pumpAndSettle();
       await t.tap(find.byTooltip('Impostazioni'));
       await t.pumpAndSettle();
-      expect(find.byType(ListTile), findsNWidgets(3));
-      for (final label in ['Promemoria', 'Backup e dati', 'Info']) {
+      expect(find.byType(ListTile), findsNWidgets(4));
+      for (final label in [
+        'Promemoria',
+        'Backup e dati',
+        'Guida breve',
+        'Info',
+      ]) {
         expect(find.text(label), findsOneWidget);
       }
+      expect(
+        t
+            .widgetList<ListTile>(find.byType(ListTile))
+            .map((tile) => (tile.title as Text).data)
+            .toList(),
+        ['Promemoria', 'Backup e dati', 'Guida breve', 'Info'],
+      );
       expect(find.text('Leggibilità'), findsNothing);
       expect(find.text('Riduci trasparenze'), findsNothing);
       await t.tap(find.text('Info'));
@@ -304,6 +318,10 @@ void main() {
       await t.tap(find.byKey(const ValueKey('repository-link')));
       await t.pumpAndSettle();
       expect(calls.any((c) => c.method == 'openRepository'), isTrue);
+      expect(find.text('Guida breve'), findsNothing);
+      await t.tap(find.byType(BackButton));
+      await t.pumpAndSettle();
+      await t.ensureVisible(find.text('Guida breve'));
       await t.tap(find.text('Guida breve'));
       await t.pumpAndSettle();
       expect(find.byType(GuidePage), findsOneWidget);
@@ -351,6 +369,53 @@ void main() {
           .any((f) => f.enabled),
       isTrue,
     );
+    await t.pumpWidget(const SizedBox());
+  });
+  testWidgets('Apri diario più leggibile senza ingrandire il pannello Home', (
+    t,
+  ) async {
+    await t.pumpWidget(app());
+    await t.pumpAndSettle();
+    final card = t.widget<GlassCard>(find.byType(GlassCard).first);
+    final originalPanelSize = t.getSize(find.byType(GlassCard).first);
+    final button = t.widget<TextButton>(
+      find.ancestor(
+        of: find.text('Apri diario'),
+        matching: find.byWidgetPredicate((w) => w is TextButton),
+      ),
+    );
+    expect(button.style!.textStyle!.resolve({})!.fontSize, 16);
+    expect(button.style!.iconSize!.resolve({}), 22);
+    final column = card.child as Column;
+    // Recreate the previous button under the same card, width and theme to
+    // verify the typography change consumes existing space only.
+    await t.pumpWidget(
+      MaterialApp(
+        theme: appTheme(false),
+        home: Scaffold(
+          body: Padding(
+            padding: const EdgeInsets.all(24),
+            child: GlassCard(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  column.children.first,
+                  TextButton.icon(
+                    onPressed: () {},
+                    icon: const Icon(Icons.menu_book_outlined),
+                    label: const Text('Apri diario'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await t.pumpAndSettle();
+    expect(t.getSize(find.byType(GlassCard)), originalPanelSize);
+    expect(t.takeException(), isNull);
     await t.pumpWidget(const SizedBox());
   });
 }

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import '../../app/version.dart';
 import '../../core/design_system/components.dart';
 import '../../core/design_system/theme.dart';
@@ -108,16 +107,6 @@ class AboutPage extends StatelessWidget {
                 ],
               );
             },
-          ),
-        ),
-        const SizedBox(height: 20),
-        GlassCard(
-          child: ListTile(
-            contentPadding: EdgeInsets.zero,
-            leading: const Icon(Icons.menu_book_outlined),
-            title: const Text('Guida breve'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => context.push('/guide'),
           ),
         ),
       ],

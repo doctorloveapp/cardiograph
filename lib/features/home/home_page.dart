@@ -107,6 +107,13 @@ class HomePage extends ConsumerWidget {
                     ),
                   ),
                   TextButton.icon(
+                    style: TextButton.styleFrom(
+                      textStyle: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                      iconSize: 22,
+                    ),
                     onPressed: () => context.push('/diary'),
                     icon: const Icon(Icons.menu_book_outlined),
                     label: const Text('Apri diario'),

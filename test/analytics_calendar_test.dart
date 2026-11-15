@@ -363,6 +363,24 @@ void main() {
       expect(repo.monthQueries, 1);
       expect(repo.dayQueries, 2);
       expect(t.getSemantics(day).label, contains('Sera 1'));
+      final markers = t
+          .widgetList<ClipPath>(
+            find.descendant(of: day, matching: find.byType(ClipPath)),
+          )
+          .toList();
+      expect(markers.length, 3);
+      expect(markers[0].clipper, isNull);
+      expect(markers[1].clipper, isNull);
+      final triangle = markers[2].clipper!.getClip(const Size(6, 6));
+      expect(triangle.getBounds(), const Rect.fromLTWH(0, 0, 6, 6));
+      expect(triangle.contains(const Offset(3, 1)), isTrue);
+      expect(triangle.contains(const Offset(.5, .5)), isFalse);
+      expect(triangle.contains(const Offset(3, 5)), isTrue);
+      expect(
+        find.textContaining('● Mattina · ■ Pomeriggio · ▲ Sera'),
+        findsOneWidget,
+      );
+
       expect(t.getSemantics(day).label, contains('28 febbraio 2024'));
       expect(t.getSemantics(day).label, contains('1 misurazione'));
       final before = t
