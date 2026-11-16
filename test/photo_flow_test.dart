@@ -48,19 +48,8 @@ void main() {
     );
     await t.pumpAndSettle();
     expect(requested, 1);
-    expect(
-      t
-          .widget<FilledButton>(
-            find
-                .ancestor(
-                  of: find.text('Scatta'),
-                  matching: find.byWidgetPredicate((w) => w is FilledButton),
-                )
-                .first,
-          )
-          .onPressed,
-      isNull,
-    );
+    expect(find.text('Scatta'), findsNothing);
+    expect(find.text('Inserisci a mano'), findsOneWidget);
     await t.tap(find.text('Consenti fotocamera'));
     await t.pumpAndSettle();
     expect(find.text('Apri impostazioni'), findsOneWidget);

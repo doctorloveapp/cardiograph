@@ -144,7 +144,7 @@ class GuidePage extends StatelessWidget {
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
               Text(
-                'Apri una lettura per modificarla o eliminarla. I grafici separano pressione e pulsazioni; filtra per periodo e fascia. Le letture prima delle 07:00 appartengono alla fascia Sera ma restano nel loro giorno civile.',
+                'Apri una lettura per modificarla o eliminarla. I grafici separano pressione e pulsazioni; filtra per periodo e fascia. Premi 2X nell’header per ingrandire e trascina il grafico in ogni direzione; 1X ripristina la vista. Il tap sui punti mantiene i dettagli. Le letture prima delle 07:00 appartengono alla fascia Sera ma restano nel loro giorno civile.',
               ),
               SizedBox(height: 16),
               Text('Promemoria', style: TextStyle(fontWeight: FontWeight.bold)),
@@ -162,7 +162,7 @@ class GuidePage extends StatelessWidget {
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
               Text(
-                'Il backup standard non richiede password ed è leggibile da chi possiede il file. Attiva Proteggi backup con password per cifrare le esportazioni future e conserva la password: non è recuperabile dall’app. Il ripristino chiede la password solo se il file selezionato è cifrato.',
+                'I backup sono nominati con data e ora locali di creazione; i PDF con le date iniziale e finale del periodo. Il backup standard non richiede password ed è leggibile da chi possiede il file. Attiva Proteggi backup con password per cifrare le esportazioni future e conserva la password: non è recuperabile dall’app. Il ripristino chiede la password solo se il file selezionato è cifrato.',
               ),
               SizedBox(height: 16),
               Text(
@@ -171,6 +171,14 @@ class GuidePage extends StatelessWidget {
               ),
               Text(
                 'Il ripristino sostituisce letture e preferenze portabili: controlla conteggio e date ed esporta prima una copia dell’archivio attuale. Cancella tutti i dati è un comando distinto con doppia conferma; i file già esportati restano nei percorsi scelti.',
+              ),
+              SizedBox(height: 16),
+              Text(
+                'Aggiornamenti',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              Text(
+                'In Impostazioni → Aggiornamenti puoi disattivare il controllo automatico, attivo di default a ogni avvio. Una nuova release apre un avviso; conferma per aprire il browser. Ultima release apre GitHub. Il diario resta utilizzabile offline; nessuna lettura viene inviata.',
               ),
               SizedBox(height: 16),
               Text(

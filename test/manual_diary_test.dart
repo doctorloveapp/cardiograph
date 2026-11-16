@@ -1,3 +1,4 @@
+import 'package:flutter/services.dart';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -30,9 +31,18 @@ class FailingRepository extends MeasurementRepository {
 }
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
   late AppDatabase db;
   setUpAll(tzdata.initializeTimeZones);
   setUp(() async {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(
+          const MethodChannel('dev.danking.cardiograph/camera'),
+          (call) async =>
+              call.method == 'permission' || call.method == 'requestPermission'
+              ? 'denied'
+              : null,
+        );
     db = AppDatabase(NativeDatabase.memory());
     await db.customSelect('SELECT 1').get();
   });

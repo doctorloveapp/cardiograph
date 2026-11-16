@@ -1,3 +1,4 @@
+import '../../core/services/export_names.dart';
 import '../../core/text/italian.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -180,8 +181,10 @@ class _ReportsPageState extends ConsumerState<ReportsPage> {
         MaterialPageRoute<void>(
           builder: (_) => ReportPreviewPage(
             bytes: bytes,
-            filename:
-                'CardioGraph_${snapshot.period.civil.start}_${snapshot.period.civil.end}.pdf',
+            filename: reportFilename(
+              snapshot.period.civil.start,
+              snapshot.period.civil.end,
+            ),
           ),
         ),
       );

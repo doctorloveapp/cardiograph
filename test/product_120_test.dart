@@ -274,18 +274,19 @@ void main() {
     },
   );
   testWidgets(
-    'Impostazioni: cinque accessi ordinati e Info con asset/link browser',
+    'Impostazioni: sei accessi ordinati e Info con asset/link browser',
     (t) async {
       await t.pumpWidget(app());
       await t.pumpAndSettle();
       await t.tap(find.byTooltip('Impostazioni'));
       await t.pumpAndSettle();
-      expect(find.byType(ListTile), findsNWidgets(5));
+      expect(find.byType(ListTile), findsNWidgets(6));
       for (final label in [
         'Promemoria',
         'Backup e dati',
         'Guida breve',
         'Privacy',
+        'Aggiornamenti',
         'Info',
       ]) {
         expect(find.text(label), findsOneWidget);
@@ -295,7 +296,14 @@ void main() {
             .widgetList<ListTile>(find.byType(ListTile))
             .map((tile) => (tile.title as Text).data)
             .toList(),
-        ['Promemoria', 'Backup e dati', 'Guida breve', 'Privacy', 'Info'],
+        [
+          'Promemoria',
+          'Backup e dati',
+          'Guida breve',
+          'Privacy',
+          'Aggiornamenti',
+          'Info',
+        ],
       );
       expect(find.text('Leggibilità'), findsNothing);
       expect(find.text('Riduci trasparenze'), findsNothing);

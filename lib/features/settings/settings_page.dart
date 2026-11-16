@@ -17,6 +17,7 @@ class SettingsPage extends StatelessWidget {
           ('Backup e dati', Icons.backup_outlined, '/settings/backup'),
           ('Guida breve', Icons.menu_book_outlined, '/guide'),
           ('Privacy', Icons.privacy_tip_outlined, '/privacy'),
+          ('Aggiornamenti', Icons.system_update_outlined, '/updates'),
           ('Info', Icons.info_outline, '/about'),
         ]) ...[
           GlassCard(

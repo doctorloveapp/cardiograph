@@ -1,3 +1,5 @@
+import 'dart:io';
+import '../features/settings/updates_page.dart';
 import '../features/settings/privacy_page.dart';
 import '../features/reminders/reminder_sync.dart';
 import '../features/settings/about_page.dart';
@@ -56,6 +58,7 @@ GoRouter createRouter() => GoRouter(
     GoRoute(path: '/about', builder: (c, s) => const AboutPage()),
     GoRoute(path: '/guide', builder: (c, s) => const GuidePage()),
     GoRoute(path: '/privacy', builder: (c, s) => const PrivacyPage()),
+    GoRoute(path: '/updates', builder: (c, s) => const UpdatesPage()),
     GoRoute(
       path: '/settings/reminders',
       builder: (c, s) => reminderSettingsPage(),
@@ -113,8 +116,48 @@ class _CardioGraphAppState extends ConsumerState<CardioGraphApp>
   }
 
   Future<void> _startup() async {
+    unawaited(_updates());
     await _launch();
     await _recoverPending();
+  }
+
+  Future<void> _updates() async {
+    if (!Platform.isAndroid) return;
+    try {
+      final version = await checkForUpdate(
+        enabled: await autoUpdatesEnabled(),
+        load: readLatestRelease,
+      );
+      if (version == null || !mounted || !await autoUpdatesEnabled()) return;
+      final context = ref
+          .read(routerProvider)
+          .routerDelegate
+          .navigatorKey
+          .currentContext;
+      if (context == null || !context.mounted) return;
+      final open = await showDialog<bool>(
+        context: context,
+        builder: (c) => GlassDialog(
+          title: const Text('Aggiornamento disponibile'),
+          content: Text(
+            'È disponibile CardioGraph $version. Apri GitHub per scaricare la nuova versione.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(c, false),
+              child: const Text('Più tardi'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(c, true),
+              child: const Text('Apri release'),
+            ),
+          ],
+        ),
+      );
+      if (open == true) await openReleases();
+    } catch (_) {
+      /* Offline and platform failures never block the diary. */
+    }
   }
 
   Future<void> _recoverPending() async {

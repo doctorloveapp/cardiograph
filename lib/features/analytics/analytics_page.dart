@@ -1,3 +1,4 @@
+import 'zoom_chart_card.dart';
 import '../../core/text/italian.dart';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
@@ -216,6 +217,13 @@ class AnalyticsPage extends ConsumerStatefulWidget {
 
 class _AnalyticsPageState extends ConsumerState<AnalyticsPage> {
   int _days = 7, _shown = 20;
+  final _chartTouch = ValueNotifier<bool>(false);
+  @override
+  void dispose() {
+    _chartTouch.dispose();
+    super.dispose();
+  }
+
   CivilPeriod? _custom;
   bool _all = false;
   DayBand? _band;
@@ -286,6 +294,7 @@ class _AnalyticsPageState extends ConsumerState<AnalyticsPage> {
             : selected;
         final count = math.min(_shown, originals.length);
         return ListView.builder(
+          physics: ChartScrollPhysics(_chartTouch),
           padding: const EdgeInsets.all(24),
           itemCount: count + 2,
           itemBuilder: (context, index) {
@@ -413,52 +422,35 @@ class _AnalyticsPageState extends ConsumerState<AnalyticsPage> {
                     ])
                       Padding(
                         padding: const EdgeInsets.only(bottom: 24),
-                        child: GlassCard(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                        child: ZoomChartCard(
+                          key: ValueKey('chart-${metrics.first.name}'),
+                          title: metrics.length == 2
+                              ? 'Pressione · mmHg'
+                              : 'Pulsazioni · bpm',
+                          legend: Wrap(
+                            spacing: 16,
                             children: [
-                              Text(
-                                metrics.length == 2
-                                    ? 'Pressione · mmHg'
-                                    : 'Pulsazioni · bpm',
-                                style: Theme.of(context).textTheme.titleLarge,
-                              ),
-                              Wrap(
-                                spacing: 16,
-                                children: [
-                                  for (final m in metrics)
-                                    Text(
-                                      '${m == Metric.diastolic ? '■ ┄' : '● ━'} ${m.label}',
-                                      style: TextStyle(
-                                        color: metricColor(m, 0),
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                ],
-                              ),
-                              const SizedBox(height: 16),
-                              Semantics(
-                                label:
-                                    '${metrics.length == 2 ? 'Grafico pressione' : 'Grafico pulsazioni'}, ${countNoun(data.stats.count, 'lettura', 'letture')}. Riepilogo e letture originali disponibili sotto.',
-                                child: SizedBox(
-                                  height: 270,
-                                  child: LineChart(
-                                    metricChart(
-                                      data,
-                                      metrics,
-                                      (o) => setState(() {
-                                        _selectedId = o.daily
-                                            ? null
-                                            : o.originals.first.id;
-                                        _selectedDay = o.daily ? o.day : null;
-                                        _shown = 20;
-                                      }),
-                                    ),
-                                    duration: Duration.zero,
+                              for (final m in metrics)
+                                Text(
+                                  '${m == Metric.diastolic ? '■ ┄' : '● ━'} ${m.label}',
+                                  style: TextStyle(
+                                    color: metricColor(m, 0),
+                                    fontWeight: FontWeight.w600,
                                   ),
                                 ),
-                              ),
                             ],
+                          ),
+                          onInteraction: (active) => _chartTouch.value = active,
+                          data: metricChart(
+                            data,
+                            metrics,
+                            (o) => setState(() {
+                              _selectedId = o.daily
+                                  ? null
+                                  : o.originals.first.id;
+                              _selectedDay = o.daily ? o.day : null;
+                              _shown = 20;
+                            }),
                           ),
                         ),
                       ),

@@ -30,6 +30,9 @@ class _CameraPageState extends ConsumerState<CameraPage>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) ScaffoldMessenger.of(context).hideCurrentSnackBar();
+    });
     unawaited(
       SystemChrome.setPreferredOrientations(const [
         DeviceOrientation.portraitUp,
@@ -182,181 +185,220 @@ class _CameraPageState extends ConsumerState<CameraPage>
         title: const Text('Scatta foto'),
         leading: BackButton(onPressed: _busy ? null : () => context.pop()),
       ),
-      body: Column(
-        children: [
-          const Padding(
-            padding: EdgeInsets.all(16),
-            child: Text(
-              'Inquadra i tre valori',
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.w600),
-            ),
-          ),
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 24),
-            child: Text(
-              'Solo il display nel riquadro. Tocca per mettere a fuoco; evita i riflessi.',
-            ),
-          ),
-          Expanded(
-            child: _permission == 'granted'
-                ? LayoutBuilder(
-                    builder: (context, _) => Stack(
-                      fit: StackFit.expand,
-                      children: [
-                        AndroidView(
-                          key: ValueKey(_previewKey),
-                          viewType: 'dev.danking.cardiograph/preview',
-                          onPlatformViewCreated: (_) => _start(),
-                        ),
-                        IgnorePointer(
-                          child: Center(
-                            child: FractionallySizedBox(
-                              widthFactor: CameraGuide.fraction,
-                              heightFactor: CameraGuide.fraction,
-                              child: DecoratedBox(
-                                decoration: BoxDecoration(
-                                  border: Border.all(
-                                    color: Colors.white,
-                                    width: 3,
+      body: _permission != 'granted'
+          ? ListView(
+              padding: const EdgeInsets.all(24),
+              children: [
+                const Text(
+                  'Inquadra i tre valori',
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  _error ??
+                      (_permission == 'permanent'
+                          ? 'Abilita la fotocamera nelle impostazioni del telefono.'
+                          : 'Il permesso fotocamera serve soltanto per fotografare il display.'),
+                ),
+                const SizedBox(height: 16),
+                FilledButton(
+                  onPressed: () => _permission == 'permanent'
+                      ? _service.settings()
+                      : _checkPermission(true),
+                  child: Text(
+                    _permission == 'permanent'
+                        ? 'Apri impostazioni'
+                        : 'Consenti fotocamera',
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextButton(
+                  onPressed: () => context.pushReplacement('/manual'),
+                  child: const Text('Inserisci a mano'),
+                ),
+              ],
+            )
+          : Column(
+              children: [
+                const Padding(
+                  padding: EdgeInsets.all(16),
+                  child: Text(
+                    'Inquadra i tre valori',
+                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.w600),
+                  ),
+                ),
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 24),
+                  child: Text(
+                    'Solo il display nel riquadro. Tocca per mettere a fuoco; evita i riflessi.',
+                  ),
+                ),
+                Expanded(
+                  child: _permission == 'granted'
+                      ? LayoutBuilder(
+                          builder: (context, _) => Stack(
+                            fit: StackFit.expand,
+                            children: [
+                              AndroidView(
+                                key: ValueKey(_previewKey),
+                                viewType: 'dev.danking.cardiograph/preview',
+                                onPlatformViewCreated: (_) => _start(),
+                              ),
+                              IgnorePointer(
+                                child: Center(
+                                  child: FractionallySizedBox(
+                                    widthFactor: CameraGuide.fraction,
+                                    heightFactor: CameraGuide.fraction,
+                                    child: DecoratedBox(
+                                      decoration: BoxDecoration(
+                                        border: Border.all(
+                                          color: Colors.white,
+                                          width: 3,
+                                        ),
+                                        borderRadius: BorderRadius.circular(16),
+                                      ),
+                                      child: Column(
+                                        children: [
+                                          for (var i = 0; i < 3; i++)
+                                            Expanded(
+                                              child: Container(
+                                                alignment: Alignment.topLeft,
+                                                padding: const EdgeInsets.all(
+                                                  8,
+                                                ),
+                                                decoration: BoxDecoration(
+                                                  border: i < 2
+                                                      ? const Border(
+                                                          bottom: BorderSide(
+                                                            color:
+                                                                Colors.white70,
+                                                          ),
+                                                        )
+                                                      : null,
+                                                ),
+                                                child: Text(
+                                                  [
+                                                    'Massima',
+                                                    'Minima',
+                                                    'Pulsazioni',
+                                                  ][i],
+                                                  style: const TextStyle(
+                                                    color: Colors.white,
+                                                    backgroundColor:
+                                                        Colors.black54,
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                        ],
+                                      ),
+                                    ),
                                   ),
-                                  borderRadius: BorderRadius.circular(16),
                                 ),
-                                child: Column(
-                                  children: [
-                                    for (var i = 0; i < 3; i++)
-                                      Expanded(
-                                        child: Container(
-                                          alignment: Alignment.topLeft,
-                                          padding: const EdgeInsets.all(8),
-                                          decoration: BoxDecoration(
-                                            border: i < 2
-                                                ? const Border(
-                                                    bottom: BorderSide(
-                                                      color: Colors.white70,
-                                                    ),
-                                                  )
-                                                : null,
-                                          ),
-                                          child: Text(
-                                            [
-                                              'Massima',
-                                              'Minima',
-                                              'Pulsazioni',
-                                            ][i],
+                              ),
+                              if (_error != null)
+                                ColoredBox(
+                                  color: Colors.black87,
+                                  child: Center(
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(24),
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Text(
+                                            _error!,
                                             style: const TextStyle(
                                               color: Colors.white,
-                                              backgroundColor: Colors.black54,
                                             ),
                                           ),
-                                        ),
+                                          FilledButton(
+                                            onPressed: _start,
+                                            child: const Text('Riprova'),
+                                          ),
+                                        ],
                                       ),
-                                  ],
+                                    ),
+                                  ),
                                 ),
-                              ),
+                            ],
+                          ),
+                        )
+                      : Center(
+                          child: SingleChildScrollView(
+                            padding: const EdgeInsets.all(24),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  _error ??
+                                      (_permission == 'permanent'
+                                          ? 'Abilita la fotocamera nelle impostazioni del telefono.'
+                                          : 'Il permesso fotocamera serve soltanto per fotografare il display.'),
+                                ),
+                                if (_permission != null)
+                                  FilledButton(
+                                    onPressed: () => _permission == 'permanent'
+                                        ? _service.settings()
+                                        : _checkPermission(true),
+                                    child: Text(
+                                      _permission == 'permanent'
+                                          ? 'Apri impostazioni'
+                                          : 'Consenti fotocamera',
+                                    ),
+                                  ),
+                              ],
                             ),
                           ),
                         ),
-                        if (_error != null)
-                          ColoredBox(
-                            color: Colors.black87,
-                            child: Center(
-                              child: Padding(
-                                padding: const EdgeInsets.all(24),
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Text(
-                                      _error!,
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                    FilledButton(
-                                      onPressed: _start,
-                                      child: const Text('Riprova'),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
+                ),
+                SafeArea(
+                  top: false,
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Wrap(
+                      alignment: WrapAlignment.center,
+                      spacing: 12,
+                      runSpacing: 8,
+                      children: [
+                        IconButton(
+                          tooltip: _torch ? 'Spegni torcia' : 'Accendi torcia',
+                          onPressed: !_ready || !_hasTorch || _busy
+                              ? null
+                              : () async {
+                                  final value = !_torch;
+                                  try {
+                                    if (await _service.torch(value) &&
+                                        mounted) {
+                                      setState(() => _torch = value);
+                                    }
+                                  } catch (_) {
+                                    if (mounted) {
+                                      setState(
+                                        () =>
+                                            _error = 'Torcia non disponibile.',
+                                      );
+                                    }
+                                  }
+                                },
+                          icon: Icon(_torch ? Icons.flash_on : Icons.flash_off),
+                        ),
+                        FilledButton.icon(
+                          onPressed: _ready && !_busy ? _shoot : null,
+                          icon: const Icon(Icons.camera_alt),
+                          label: Text(_busy ? 'Scatto in corso…' : 'Scatta'),
+                        ),
+                        TextButton(
+                          onPressed: _busy
+                              ? null
+                              : () => context.pushReplacement('/manual'),
+                          child: const Text('Inserisci a mano'),
+                        ),
                       ],
                     ),
-                  )
-                : Center(
-                    child: SingleChildScrollView(
-                      padding: const EdgeInsets.all(24),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            _error ??
-                                (_permission == 'permanent'
-                                    ? 'Abilita la fotocamera nelle impostazioni del telefono.'
-                                    : 'Il permesso fotocamera serve soltanto per fotografare il display.'),
-                          ),
-                          if (_permission != null)
-                            FilledButton(
-                              onPressed: () => _permission == 'permanent'
-                                  ? _service.settings()
-                                  : _checkPermission(true),
-                              child: Text(
-                                _permission == 'permanent'
-                                    ? 'Apri impostazioni'
-                                    : 'Consenti fotocamera',
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
                   ),
-          ),
-          SafeArea(
-            top: false,
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Wrap(
-                alignment: WrapAlignment.center,
-                spacing: 12,
-                runSpacing: 8,
-                children: [
-                  IconButton(
-                    tooltip: _torch ? 'Spegni torcia' : 'Accendi torcia',
-                    onPressed: !_ready || !_hasTorch || _busy
-                        ? null
-                        : () async {
-                            final value = !_torch;
-                            try {
-                              if (await _service.torch(value) && mounted) {
-                                setState(() => _torch = value);
-                              }
-                            } catch (_) {
-                              if (mounted) {
-                                setState(
-                                  () => _error = 'Torcia non disponibile.',
-                                );
-                              }
-                            }
-                          },
-                    icon: Icon(_torch ? Icons.flash_on : Icons.flash_off),
-                  ),
-                  FilledButton.icon(
-                    onPressed: _ready && !_busy ? _shoot : null,
-                    icon: const Icon(Icons.camera_alt),
-                    label: Text(_busy ? 'Scatto in corso…' : 'Scatta'),
-                  ),
-                  TextButton(
-                    onPressed: _busy
-                        ? null
-                        : () => context.pushReplacement('/manual'),
-                    child: const Text('Inserisci a mano'),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
-          ),
-        ],
-      ),
     ),
   );
 }

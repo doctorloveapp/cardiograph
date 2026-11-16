@@ -2,7 +2,7 @@
   <img src="assets/logo.png" alt="CardioGraph" width="112" />
   <h1>CardioGraph</h1>
   <p>Diario pressorio locale per Android.</p>
-  <a href="pubspec.yaml"><img alt="Versione" src="https://img.shields.io/badge/versione-1.3.1-1261C9?style=flat-square" /></a>
+  <a href="pubspec.yaml"><img alt="Versione" src="https://img.shields.io/badge/versione-1.4.0-1261C9?style=flat-square" /></a>
   <a href="#prerequisiti"><img alt="Android API 26+" src="https://img.shields.io/badge/Android-8.0%2B%20(API%2026%2B)-08D8BF?style=flat-square&logo=android&logoColor=white" /></a>
   <a href="https://flutter.dev/"><img alt="Flutter" src="https://img.shields.io/badge/Flutter-3.38.5-02569B?style=flat-square&logo=flutter" /></a>
   <img alt="Sviluppatore" src="https://img.shields.io/badge/sviluppatore-Dan%20King-142D4E?style=flat-square" />
@@ -13,7 +13,7 @@
 
 ## Il progetto
 
-CardioGraph è un diario Flutter per Android dedicato a pressione e pulsazioni, senza account o servizi remoti. La versione 1.3.1 include archivio cifrato, acquisizione fotografica con revisione, consultazione, report PDF e backup portabili. Il primo avvio parte senza dati dimostrativi. Il manifest release non richiede accesso a Internet; i badge di questa pagina sono risorse esterne del solo README.
+CardioGraph è un diario Flutter per Android dedicato a pressione e pulsazioni, senza account e senza servizi remoti per il diario; la sola verifica aggiornamenti contatta GitHub. La versione 1.4.0 include archivio cifrato, acquisizione fotografica con revisione, consultazione, report PDF e backup portabili. Il primo avvio parte senza dati dimostrativi. Il manifest release richiede INTERNET per il solo controllo aggiornamenti; le funzioni del diario restano offline; i badge di questa pagina sono risorse esterne del solo README.
 
 ## Funzionalità
 
@@ -25,7 +25,7 @@ CardioGraph è un diario Flutter per Android dedicato a pressione e pulsazioni, 
 | Report PDF offline multipagina, anteprima e SAF | Cinque periodi, incluso l’intero archivio; autore PDF vuoto |
 | Promemoria intelligenti personalizzabili | Predefiniti 10:00 / 16:00 / 21:00; avviso solo se manca una lettura nella sessione |
 | Backup .cardiograph e ripristino con sostituzione atomica | Disponibili, standard senza password o cifrati su scelta dell’utente |
-| Glass/3D, footer con selezione bianca e Info sviluppatore | Sempre attivi; Impostazioni a cinque voci |
+| Glass/3D, footer con selezione bianca e Info sviluppatore | Sempre attivi; Impostazioni a sei voci |
 
 Dan King identifica lo sviluppatore e il titolare della firma Android; non viene inserito come autore nei report PDF.
 
@@ -84,7 +84,7 @@ Dalla radice, su questo ambiente Windows:
 & 'C:\Users\hp_wi\Downloads\GEMINI~1\flutter\bin\flutter.bat' pub get --enforce-lockfile
 & 'C:\Users\hp_wi\Downloads\GEMINI~1\flutter\bin\flutter.bat' analyze
 & 'C:\Users\hp_wi\Downloads\GEMINI~1\flutter\bin\flutter.bat' test
-& 'C:\Users\hp_wi\Downloads\GEMINI~1\flutter\bin\flutter.bat' build apk --release --target-platform android-arm64 --obfuscate --split-debug-info=output/symbols/1.3.1+6
+& 'C:\Users\hp_wi\Downloads\GEMINI~1\flutter\bin\flutter.bat' build apk --release --target-platform android-arm64 --obfuscate --split-debug-info=output/symbols/1.4.0+7
 ```
 
 Il percorso breve evita il problema Windows dei native hooks con spazi. Su altre macchine configurare uno SDK compatibile e un percorso locale adeguato; non versionare local.properties.
@@ -93,19 +93,19 @@ Il percorso breve evita il problema Windows dei native hooks con spazi. Su altre
 
 Application ID e namespace: **dev.danking.cardiograph**. La configurazione legge `secrets/android/key.properties`, con `storeFile`, `storePassword`, `keyAlias` e `keyPassword`. Keystore e credenziali restano esclusi da Git. La release usa il certificato Dan King già impiegato negli aggiornamenti; conservare la stessa chiave per mantenere la continuità delle installazioni. Nessun ripiego sulla firma debug.
 
-Versione Android: **1.3.1 (build 6)**. Artefatto finale: **APK arm64 offuscata**, `build/app/outputs/flutter-apk/app-release.apk`. Conservare separatamente i simboli in `output/symbols/1.3.1+6` per `flutter symbolize`; non incorporarli nell’APK. Per verificarlo usare `apksigner verify --verbose --print-certs` degli Android Build Tools.
+Versione Android: **1.4.0 (build 7)**. Artefatto finale: **APK arm64 offuscata**, `build/app/outputs/flutter-apk/app-release.apk`. Conservare separatamente i simboli in `output/symbols/1.4.0+7` per `flutter symbolize`; non incorporarli nell’APK. Per verificarlo usare `apksigner verify --verbose --print-certs` degli Android Build Tools.
 
 ## Verifica e limiti noti
 
-Versione **1.3.1+6**, solo arm64. Per la precedente 1.2.2: analisi statica pulita e **77 test Flutter**; i 6 test JVM Android dello scheduler restano riferiti alla verifica 1.2.0. Le verifiche della nuova versione comprendono migrazione DB v4, backup schema 3, soppressione/sessioni, orari e nuove schermate. La regressione OCR rimane 6/6. La 1.3.1 rifinisce gli indicatori Sera a triangolo, sposta Guida breve nelle Impostazioni e ingrandisce Apri diario senza cambiare le dimensioni della card Home. Le installazioni Samsung e le prove su emulatore descritte sotto si riferiscono alla precedente 1.1.0+2; la nuova APK viene consegnata per il collaudo dell’utente senza usare il telefono. Backup cifrato provato dalla UI su dati sintetici; PDF verificato anche in Adobe Acrobat. TalkBack collegato e testo 200% verificati; audit vocale umano esteso ancora da completare.
+Versione **1.4.0+7**, sola ABI arm64, firma Dan King. Test mirati per zoom 2X, pan sui due assi, scroll esterno fermo, header/reset fissi e selezione della misura dopo trasformazione; test per release/tag/asset/confronto versioni, flag default true, errore offline e nomi file. **83/83 test Flutter superati**, analisi statica pulita e OCR **6/6**; risultati documentati nel piano. Endpoint reale GitHub verificato HTTP 200 con tag CardioGraphVer1.3.1 e asset CardioGraph.Ver1.3.1.apk il 16 novembre 2026.
 
-Stress isolato in profile con 10.000/50.000 letture: query mensile p95 **11,7/258,7 ms**, Home da widget montato con DB aperto **1,28 s**, Argon2id+AES per due letture **794 ms** sull’emulatore Windows con GPU host. Non sono misure di avvio a freddo o prestazioni sul telefono minimo. SwiftShader ha provocato crash del processo QEMU; il test è terminato con GPU host. Il budget frame ≥95% a 60 Hz resta da validare su hardware reale di riferimento.
+Le installazioni e prove fisiche delle versioni precedenti non sostituiscono il collaudo della nuova versione. Questa consegna è verificata con eventi touch automatici e test locali; nessun archivio reale alterato. Matrice produttori, audit vocale umano e profiling sul dispositivo minimo restano aperti. I benchmark e le prove Doze storici sono registrati in piano_fasi.md; non sono ripetuti per questa release.
 
-Promemoria verificati su emulatore con Doze breve, reboot senza aprire l’app, cambio ora/fuso e revoca precisione. Restano da estendere durata e matrice produttori. L’OCR richiede sempre revisione manuale: sei foto note non garantiscono affidabilità su altri misuratori o condizioni. PDF limitati a 10.000 letture per documento; backup a 64 MiB/100.000 letture.
+L’OCR richiede revisione manuale: sei foto note non garantiscono affidabilità su ogni misuratore. PDF limitati a 10.000 letture per documento; backup a 64 MiB/100.000 letture. I controlli di aggiornamento dipendono dalla disponibilità e dai limiti pubblici di GitHub; non verificano versioni private né installano automaticamente file. I checksum del backup standard non forniscono autenticità.
 
 ## Promemoria e Impostazioni
 
-Impostazioni contiene **Promemoria**, **Backup e dati**, **Guida breve**, **Privacy**, **Info**, in questo ordine. Info include logo, versione, card Dan King con avatar locale e collegamento GitHub aperto dal browser Android esterno; l’app non richiede Internet. La guida breve è accessibile direttamente da Impostazioni; Info mantiene logo, versione e card sviluppatore. L’opzione «Leggibilità» è rimossa: gli effetti glass/3D sono sempre attivi anche dopo migrazione o import di un vecchio backup.
+Impostazioni contiene **Promemoria**, **Backup e dati**, **Guida breve**, **Privacy**, **Aggiornamenti**, **Info**, in questo ordine. Info include logo, versione, card Dan King con avatar locale e collegamento GitHub aperto dal browser Android esterno; il controllo release usa Internet solo per leggere i metadati pubblici GitHub, senza inviare il diario. La guida breve è accessibile direttamente da Impostazioni; Info mantiene logo, versione e card sviluppatore. L’opzione «Leggibilità» è rimossa: gli effetti glass/3D sono sempre attivi anche dopo migrazione o import di un vecchio backup.
 
 Ogni promemoria ha un orario modificabile entro la propria fascia: Mattina 07:00–13:00, Pomeriggio 13:01–19:00, Sera 19:01–06:59. La sessione serale delle letture notturne è ancorata al giorno precedente. Una lettura delle 02:00 non sopprime la notifica delle 21:00 dello stesso giorno civile; se si sceglie un promemoria notturno, questo controlla la sessione iniziata la sera prima.
 
@@ -117,10 +117,20 @@ Un marcatore persistente blocca la pubblicazione su uno snapshot obsoleto durant
 
 Per aggiornare un’installazione esistente usare `adb install -r build/app/outputs/flutter-apk/app-release.apk`, con lo stesso applicationId e certificato. Aprire l’app dopo l’aggiornamento per eseguire la migrazione e sincronizzare i promemoria. Non disinstallare né cancellare i dati; creare prima un backup portabile. L’installazione pulita è riservata a un emulatore o dispositivo senza dati da conservare.
 
-Conservare privatamente keystore, credenziali e simboli Dart in `output/symbols/1.3.1+6`; archiviare anche il mapping R8 della stessa build. Per un errore dopo il rilascio preferire un aggiornamento correttivo con versionCode superiore e migrazione compatibile. Il downgrade non è una procedura di recupero garantita; il ripristino del diario richiede un backup valido e conferma sostitutiva. Nessun AAB viene prodotto per questa consegna.
+Conservare privatamente keystore, credenziali e simboli Dart in `output/symbols/1.4.0+7`; archiviare anche il mapping R8 della stessa build. Per un errore dopo il rilascio preferire un aggiornamento correttivo con versionCode superiore e migrazione compatibile. Il downgrade non è una procedura di recupero garantita; il ripristino del diario richiede un backup valido e conferma sostitutiva. Nessun AAB viene prodotto per questa consegna.
 
 Il riferimento operativo è [piano_fasi.md](piano_fasi.md), con prove effettive e verifiche ancora aperte.
 
-La versione 1.3.1 aggiunge Privacy nelle Impostazioni, con informazioni su dati locali, permessi, conservazione, export, cifratura opzionale e riferimenti GDPR/Codice privacy. Nessun servizio remoto aggiunto. Test non rieseguiti per questo aggiornamento editoriale su richiesta dell’utente; i risultati citati sopra si riferiscono alle versioni precedenti.
 
-La 1.3.1 apre direttamente la fotocamera dalla CTA Nuova misurazione; Inserisci a mano resta disponibile nella schermata camera. Le cinque voci di Impostazioni usano card compatte, senza modificare il padding delle card nelle altre schermate. Nessun nuovo test eseguito per questa rifinitura; build release e firma verificate.
+
+## Aggiornamenti e grafici — 1.4.0
+
+Impostazioni → Aggiornamenti precede Info. Il controllo automatico è **attivo di default**, persistito localmente e disattivabile; avviene una volta per avvio del processo, senza bloccare il diario. GET HTTPS esclusivamente a `https://api.github.com/repos/doctorloveapp/cardiograph/releases/latest`, senza token, cookie o dati sanitari, con timeout 8 secondi, risposta limitata a 512 KiB e redirect disabilitati. GitHub riceve IP, orario e User-Agent generico: si applica anche la sua informativa. La preferenza è locale e non entra nel backup portabile.
+
+Riconosce release stabili pubblicate con tag `CardioGraphVerX.Y.Z` e asset caricato `CardioGraph.VerX.Y.Z.apk`. Confronta numericamente le versioni; ignora release uguali/precedenti, bozze, prerelease e asset mancanti. Una release più recente genera un dialogo con apertura, su conferma, di `https://github.com/doctorloveapp/cardiograph/releases`. Ultima release apre lo stesso indirizzo; nessuna installazione o download automatico, nessun permesso di installazione pacchetti. Errori rete/404/rate limit non impediscono l’uso offline.
+
+Ogni scheda Andamento ha zoom indipendente **2X / 1X** nell’header fisso con titolo e legenda. A 2X trascina il grafico su entrambi gli assi; il controllo sincrono dello scroll impedisce alla pagina di consumare il gesto o iniziare un fling. Il tap sui punti usa il hit-test trasformato di fl_chart e mantiene tooltip e selezione originale. Nessuna interpolazione curva o modifica dei valori.
+
+Nomi file: backup `CardioGraph_DD_MM_AAAA_HH_mm.cardiograph` con data/ora locale di creazione; PDF `CardioGraph_DD_MM_AAAA_DD_MM_AAAA.pdf` con date iniziale/finale del periodo. I provider possono gestire conflitti di nome nel selettore Android.
+
+Per pubblicare questa versione usare tag `CardioGraphVer1.4.0` e asset **CardioGraph.Ver1.4.0.apk**. Il file installabile di build resta app-release.apk; la copia con nome di pubblicazione viene consegnata accanto ad esso. Gli aggiornamenti devono mantenere lo stesso certificato e versionCode crescente.

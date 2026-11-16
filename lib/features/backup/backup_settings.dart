@@ -1,3 +1,4 @@
+import '../../core/services/export_names.dart';
 import '../../core/text/italian.dart';
 import 'dart:async';
 import 'package:flutter/foundation.dart';
@@ -161,14 +162,9 @@ class _BackupSettingsState extends ConsumerState<BackupSettings> {
     final now = ref.read(clockProvider).now();
     final bytes = await compute(encodeBackupWorker, (archive, password, now));
     password = null;
-    final stamp = now
-        .toUtc()
-        .toIso8601String()
-        .replaceAll(RegExp(r'[^0-9]'), '')
-        .substring(0, 14);
     final saved = await ref
         .read(documentFileServiceProvider)
-        .save('CardioGraph_$stamp.cardiograph', bytes);
+        .save(backupFilename(now), bytes);
     if (saved) {
       await service.markSuccessfulBackup(now);
       _message(

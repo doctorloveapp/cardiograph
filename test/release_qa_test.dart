@@ -38,14 +38,14 @@ void main() {
     await db.close();
   });
   test(
-    'Versione pubblica unica 1.3.1 build 6, nessun suffisso di sviluppo',
+    'Versione pubblica unica 1.4.0 build 7, nessun suffisso di sviluppo',
     () {
-      expect(AppVersion.name, '1.3.1');
-      expect(AppVersion.build, 6);
-      expect(AppVersion.label, 'CardioGraph 1.3.1 (build 6)');
+      expect(AppVersion.name, '1.4.0');
+      expect(AppVersion.build, 7);
+      expect(AppVersion.label, 'CardioGraph 1.4.0 (build 7)');
       expect(
         File('pubspec.yaml').readAsStringSync(),
-        contains('version: 1.3.1+6'),
+        contains('version: 1.4.0+7'),
       );
       for (final p in [
         'README.md',

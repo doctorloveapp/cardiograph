@@ -14,7 +14,7 @@ class PrivacyPage extends StatelessWidget {
           style: Theme.of(context).textTheme.headlineSmall,
         ),
         const SizedBox(height: 12),
-        const Text('Informazioni aggiornate al 15 novembre 2026'),
+        const Text('Informazioni aggiornate al 16 novembre 2026'),
         const SizedBox(height: 20),
         GlassCard(
           child: Column(
@@ -26,7 +26,7 @@ class PrivacyPage extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               SelectableText(
-                "CardioGraph è un diario personale offline per Android. Dan King è lo pseudonimo dello sviluppatore e il titolare della firma dell’app. Questa pagina descrive il funzionamento della versione 1.3.1 e i dati gestiti sul dispositivo; non descrive servizi sanitari o piattaforme cloud. Lo sviluppatore non riceve automaticamente il diario e non dispone di un pannello remoto per consultarlo.",
+                "CardioGraph è un diario personale offline per Android. Dan King è lo pseudonimo dello sviluppatore e il titolare della firma dell’app. Questa pagina descrive il funzionamento della versione 1.4.0 e i dati gestiti sul dispositivo; non descrive servizi sanitari o piattaforme cloud. Lo sviluppatore non riceve automaticamente il diario e non dispone di un pannello remoto per consultarlo.",
               ),
             ],
           ),
@@ -58,7 +58,7 @@ class PrivacyPage extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               SelectableText(
-                "Acquisizione, riconoscimento delle cifre, statistiche, PDF e crittografia vengono eseguiti localmente. I font e le risorse necessarie sono inclusi nell’app. La versione Android distribuita non dichiara il permesso INTERNET e non integra pubblicità, analisi d’uso, tracciamento o invio automatico di segnalazioni di errore a un server dello sviluppatore. Questo non esclude connessioni autonome del sistema Android, dello store o di altre app, regolate dalle rispettive impostazioni e informative.",
+                "Acquisizione, riconoscimento delle cifre, statistiche, PDF e crittografia vengono eseguiti localmente. I font e le risorse necessarie sono inclusi nell’app. La versione Android dichiara INTERNET esclusivamente per controllare in sola lettura le release pubbliche del repository doctorloveapp/cardiograph su api.github.com. Il controllo è attivo di default, disattivabile in Impostazioni → Aggiornamenti, e avviene a ogni avvio senza bloccare il diario se sei offline. Non vengono inviati letture, note, foto, PDF, backup o identificativi del diario. GitHub riceve i normali dati della connessione HTTPS, come indirizzo IP, momento della richiesta e User-Agent generico, secondo la propria informativa (https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement); il controllo di un servizio esterno non è una funzione completamente offline. Non si scaricano né installano APK automaticamente: si apre il browser solo su tua conferma. L’app non integra pubblicità, analisi d’uso, tracciamento o invio automatico di segnalazioni di errore a un server dello sviluppatore. Questo non esclude connessioni autonome del sistema Android, dello store o di altre app, regolate dalle rispettive impostazioni e informative.",
               ),
             ],
           ),
@@ -202,7 +202,7 @@ class PrivacyPage extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               SelectableText(
-                "Revisione: 15 novembre 2026 · App 1.3.1 (build 6). Le indicazioni descrivono le funzioni implementate e non costituiscono una certificazione di conformità per qualsiasi impiego. Nuovi servizi remoti o finalità richiederebbero una revisione delle informazioni prima della loro introduzione. CardioGraph resta un diario personale e non sostituisce una valutazione medica.",
+                "Revisione: 16 novembre 2026 · App 1.4.0 (build 7). Le indicazioni descrivono le funzioni implementate e non costituiscono una certificazione di conformità per qualsiasi impiego. Nuovi servizi remoti o finalità richiederebbero una revisione delle informazioni prima della loro introduzione. CardioGraph resta un diario personale e non sostituisce una valutazione medica.",
               ),
             ],
           ),

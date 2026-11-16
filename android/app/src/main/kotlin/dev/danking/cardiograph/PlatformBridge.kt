@@ -2,6 +2,7 @@ package dev.danking.cardiograph
 
 import android.Manifest
 import android.app.Activity
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
@@ -66,6 +67,15 @@ class PlatformBridge(private val activity: MainActivity, engine: FlutterEngine) 
                         result.success(ReminderEngine.status(activity))
                     }
                     "beginReminderMutation" -> { ReminderEngine.beginMutation(activity); result.success(null) }
+                    "autoUpdates" -> { result.success(activity.getSharedPreferences("update_settings", Context.MODE_PRIVATE).getBoolean("automatic", true)) }
+                    "setAutoUpdates" -> {
+                        check(activity.getSharedPreferences("update_settings", Context.MODE_PRIVATE).edit().putBoolean("automatic", call.argument<Boolean>("enabled") == true).commit())
+                        result.success(null)
+                    }
+                    "openReleases" -> {
+                        activity.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/doctorloveapp/cardiograph/releases")).addCategory(Intent.CATEGORY_BROWSABLE))
+                        result.success(null)
+                    }
                     "openRepository" -> {
                         val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/doctorloveapp/cardiograph"))
                             .addCategory(Intent.CATEGORY_BROWSABLE)
