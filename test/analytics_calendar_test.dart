@@ -1,3 +1,4 @@
+import 'package:cardiograph/core/health_ranges.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -200,13 +201,27 @@ void main() {
           chart.lineBarsData.first.spots.first.x,
       3,
     );
-    expect(chart.extraLinesData.horizontalLines.map((l) => l.y), [135, 90]);
+    expect(chart.extraLinesData.horizontalLines.map((l) => l.y), [
+      60,
+      85,
+      90,
+      100,
+      130,
+      140,
+      160,
+    ]);
     for (final metric in Metric.values) {
-      expect(metricColor(metric, metric.threshold), isNot(Brand.red));
-      expect(metricColor(metric, metric.threshold + 1), Brand.red);
+      expect(
+        metricColor(metric, metric.threshold),
+        Color(metric.rangeHex(metric.threshold)),
+      );
+      expect(
+        metricColor(metric, metric.threshold + 1),
+        Color(metric.rangeHex(metric.threshold + 1)),
+      );
     }
     final pulse = metricChart(data, [Metric.pulse], (_) {});
-    expect(pulse.extraLinesData.horizontalLines.single.y, 100);
+    expect(pulse.extraLinesData.horizontalLines.map((l) => l.y), [60, 100]);
     expect(data.stats.systolic.mean, 135.5);
     final empty = AnalyticsData(
       [],
@@ -236,8 +251,11 @@ void main() {
     final dot =
         maxBar.dotData.getDotPainter(maxBar.spots.single, 0, maxBar, 0)
             as FlDotCirclePainter;
-    expect(dot.color, Brand.red);
-    expect(metricColor(Metric.systolic, 135.001), Brand.red);
+    expect(dot.color, Color(PressureRange.grade3.hex));
+    expect(
+      metricColor(Metric.systolic, 135.001),
+      Color(PressureRange.grade1.hex),
+    );
     final morning = AnalyticsData(
       [
         reading('night', DateTime.utc(2024, 1, 1, 6)),
@@ -277,7 +295,7 @@ void main() {
       expect(day.morning, 2);
       expect(day.afternoon, 2);
       expect(day.evening, 2);
-      expect(day.highCount, 1);
+      expect(day.highCount, 6);
       expect((await repo.monthSummary('2023-12')).values.single.count, 1);
       expect(await repo.monthSummary('2025-02'), isEmpty);
       final selected = await repo.list(

@@ -1,3 +1,4 @@
+import '../../core/health_ranges.dart';
 import '../../core/text/italian.dart';
 import 'dart:math' as math;
 import 'dart:typed_data';
@@ -9,7 +10,6 @@ import '../measurements/measurement.dart';
 import 'report_model.dart';
 
 const _ink = PdfColor.fromInt(0xff16334b);
-const _red = PdfColor.fromInt(0xffb42338);
 const _blue = PdfColor.fromInt(0xff1261c9);
 const _green = PdfColor.fromInt(0xff006b5e);
 
@@ -32,9 +32,24 @@ Future<Uint8List> buildReportPdf(
   final regular = pw.TextStyle(font: font, fontSize: 9, color: _ink);
   pw.Widget text(String value, {double size = 9}) =>
       pw.Text(value, style: regular.copyWith(fontSize: size));
-  pw.Widget number(num value, Metric metric) => pw.Text(
-    _number(value),
-    style: regular.copyWith(color: metric.high(value) ? _red : _ink),
+  pw.Widget number(num value, Metric metric, {int? hex}) => pw.Row(
+    mainAxisSize: pw.MainAxisSize.min,
+    children: [
+      pw.Container(
+        width: 5,
+        height: 5,
+        decoration: pw.BoxDecoration(
+          color: PdfColor.fromInt(hex ?? metric.rangeHex(value)),
+          shape: pw.BoxShape.circle,
+          border: pw.Border.all(color: _ink, width: .3),
+        ),
+      ),
+      pw.SizedBox(width: 3),
+      pw.Text(_number(value), style: regular),
+    ],
+  );
+  final distribution = PressureDistribution(
+    s.rows.map((m) => m.pressureCategory),
   );
   pw.Widget summary(String title, List<Measurement> rows) {
     final stats = MeasurementStats(rows);
@@ -157,9 +172,6 @@ Future<Uint8List> buildReportPdf(
           'Diario personale: i valori sono stati inseriti o confermati dall’utente',
         ),
         pw.SizedBox(height: 6),
-        text(
-          'Riferimenti: massima 135 mmHg · minima 90 mmHg · pulsazioni 100 bpm. Il rosso indica un valore superiore al proprio riferimento.',
-        ),
         pw.SizedBox(height: 14),
         summary('Riepilogo generale', s.rows),
         for (final band in DayBand.values)
@@ -171,6 +183,54 @@ Future<Uint8List> buildReportPdf(
         _chart(s, [Metric.systolic, Metric.diastolic], text),
         pw.SizedBox(height: 12),
         _chart(s, [Metric.pulse], text),
+        pw.NewPage(),
+        text('Distribuzione pressione', size: 15),
+        pw.SizedBox(height: 12),
+        pw.SizedBox(
+          height: 200,
+          child: pw.Chart(
+            grid: pw.PieGrid(),
+            datasets: [
+              for (final r in PressureRange.values)
+                if (distribution.counts[r]! > 0)
+                  pw.PieDataSet(
+                    value: distribution.counts[r]!,
+                    color: PdfColor.fromInt(r.hex),
+                    innerRadius: 30,
+                    legendPosition: pw.PieLegendPosition.inside,
+                    legendWidget: pw.Text(
+                      '${distribution.percent(r).toStringAsFixed(1)}%',
+                      style: regular.copyWith(
+                        color: PdfColors.black,
+                        fontSize: distribution.percent(r) < 5 ? 7 : 11,
+                        fontWeight: pw.FontWeight.bold,
+                      ),
+                    ),
+                  ),
+            ],
+          ),
+        ),
+        pw.SizedBox(height: 12),
+        for (final r in PressureRange.values)
+          pw.Padding(
+            padding: const pw.EdgeInsets.symmetric(vertical: 5),
+            child: pw.Row(
+              children: [
+                pw.Container(
+                  width: 6,
+                  height: 6,
+                  decoration: pw.BoxDecoration(
+                    color: PdfColor.fromInt(r.hex),
+                    shape: pw.BoxShape.circle,
+                    border: pw.Border.all(color: _ink, width: .4),
+                  ),
+                ),
+                pw.SizedBox(width: 8),
+                text(r.compactLabel),
+              ],
+            ),
+          ),
+        pw.SizedBox(height: 12),
         pw.NewPage(),
         text(
           'Elenco completo · ${countNoun(s.rows.length, 'lettura', 'letture')}',
@@ -228,8 +288,20 @@ Future<Uint8List> buildReportPdf(
                       size: 8,
                     ),
                   ),
-                  cell(number(m.systolic, Metric.systolic)),
-                  cell(number(m.diastolic, Metric.diastolic)),
+                  cell(
+                    number(
+                      m.systolic,
+                      Metric.systolic,
+                      hex: m.pressureCategory.hex,
+                    ),
+                  ),
+                  cell(
+                    number(
+                      m.diastolic,
+                      Metric.diastolic,
+                      hex: m.pressureCategory.hex,
+                    ),
+                  ),
                   cell(number(m.pulse, Metric.pulse)),
                   cell(text(note(m.note), size: 8)),
                 ],
@@ -250,7 +322,7 @@ pw.Widget _chart(
   final values = [
     for (final m in s.rows)
       for (final k in metrics) k.value(m),
-    ...metrics.map((k) => k.threshold),
+    ...metrics.expand((k) => k.guides).map((v) => v.toInt()),
   ];
   final minY = (values.reduce(math.min) ~/ 10) * 10 - 10;
   final maxY = (values.reduce(math.max) ~/ 10 + 2) * 10;
@@ -266,12 +338,12 @@ pw.Widget _chart(
     children: [
       text(
         metrics.length == 2
-            ? 'Pressione (mmHg) · Massima: cerchi blu · Minima: quadrati verdi'
-            : 'Pulsazioni (bpm) · Cerchi blu',
+            ? 'Pressione (mmHg) · Massima: cerchi · Minima: quadrati'
+            : 'Pulsazioni (bpm) · Colori delle categorie',
         size: 10,
       ),
       text(
-        'Scala: $minY–$maxY · Riferimenti: ${metrics.map((k) => k.threshold).join(' / ')}',
+        'Scala: $minY–$maxY · Riferimenti: ${metrics.expand((k) => k.guides).toSet().join(' / ')}',
         size: 8,
       ),
       pw.SizedBox(height: 5),
@@ -284,18 +356,15 @@ pw.Widget _chart(
             // All coordinates remain vector paths. Exact observations, straight segments, no invented dates.
             for (final metric in metrics) {
               final color = metric == Metric.diastolic ? _green : _blue;
-              g
-                ..setStrokeColor(PdfColors.grey500)
-                ..setLineWidth(.5)
-                ..setLineDashPattern([3, 3])
-                ..drawLine(
-                  4,
-                  y(metric.threshold) + 4,
-                  width + 4,
-                  y(metric.threshold) + 4,
-                )
-                ..strokePath()
-                ..setLineDashPattern();
+              for (final reference in metric.guides) {
+                g
+                  ..setStrokeColor(PdfColors.grey500)
+                  ..setLineWidth(.5)
+                  ..setLineDashPattern([3, 3])
+                  ..drawLine(4, y(reference) + 4, width + 4, y(reference) + 4)
+                  ..strokePath()
+                  ..setLineDashPattern();
+              }
               g
                 ..setStrokeColor(color)
                 ..setLineWidth(.8);
@@ -309,7 +378,9 @@ pw.Widget _chart(
               }
               g.strokePath();
               for (final m in s.rows) {
-                g.setFillColor(metric.high(metric.value(m)) ? _red : color);
+                g.setFillColor(
+                  PdfColor.fromInt(metric.rangeHex(metric.value(m))),
+                );
                 if (metric == Metric.diastolic) {
                   g.drawRect(x(m) + 2, y(metric.value(m)) + 2, 4, 4);
                 } else {

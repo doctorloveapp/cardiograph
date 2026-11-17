@@ -1,3 +1,4 @@
+import '../../core/health_ranges.dart';
 import '../../core/text/italian.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -46,7 +47,7 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
   Widget _cell(DateTime day, Map<String, CalendarDaySummary> summaries) {
     final value = summaries[dateKey(day)], selected = isSameDay(day, _selected);
     final label =
-        '${countNoun(value?.count ?? 0, 'misurazione', 'misurazioni')}${value?.elevated == true ? ', ${value!.highCount} oltre soglia' : ''}. Mattina ${value?.morning ?? 0}, Pomeriggio ${value?.afternoon ?? 0}, Sera ${value?.evening ?? 0}';
+        '${countNoun(value?.count ?? 0, 'misurazione', 'misurazioni')}${value == null ? '' : ', pressione: ${value.category.label}'}. Mattina ${value?.morning ?? 0}, Pomeriggio ${value?.afternoon ?? 0}, Sera ${value?.evening ?? 0}';
     return Semantics(
       key: ValueKey('calendar-${dateKey(day)}'),
       label: label,
@@ -113,14 +114,24 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
                       ),
                   ],
                 ),
-                FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Text(
-                    '${value.count}',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: value.elevated ? Brand.red : Brand.navy,
-                      fontWeight: FontWeight.w700,
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 3,
+                    vertical: 1,
+                  ),
+                  decoration: BoxDecoration(
+                    color: const Color(0xff071627),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      '${value.count}',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Color(value.category.hex),
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                   ),
                 ),
@@ -221,8 +232,9 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
               ),
               const SizedBox(height: 12),
               const Text(
-                'Indicatori da sinistra: ● Mattina · ■ Pomeriggio · ▲ Sera. Il numero piccolo indica quante letture contiene il giorno.',
+                'Indicatori da sinistra: ● Mattina · ■ Pomeriggio · ▲ Sera. Il numero indica le letture; il suo colore identifica la categoria pressoria con priorità maggiore.',
               ),
+              const Text(pressureLegend),
               const SizedBox(height: 20),
               Text(
                 DateFormat('EEEE d MMMM y', 'it_IT').format(_selected),

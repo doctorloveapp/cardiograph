@@ -18,6 +18,47 @@ import 'analytics_calendar_test.dart' show reading;
 import 'package:cardiograph/features/measurements/measurement.dart';
 
 void main() {
+  test(
+    'PDF tutte le categorie: torta vettoriale, legenda e autore vuoto',
+    () async {
+      final rows = [
+        for (final (i, sys, dia, pulse) in [
+          (1, 85, 55, 59),
+          (2, 110, 70, 60),
+          (3, 135, 80, 99),
+          (4, 145, 78, 100),
+          (5, 165, 80, 110),
+        ])
+          reading(
+            'range-$i',
+            DateTime.utc(2024, 2, i, 12),
+            sys: sys,
+            dia: dia,
+            pulse: pulse,
+          ),
+      ];
+      final snapshot = ReportSnapshot(
+        period: ReportPeriod.month(2024, 2),
+        rows: rows,
+        generatedAt: DateTime(2024, 3, 1),
+      );
+      final bytes = await buildReportPdf((
+        snapshot,
+        File('assets/logo.png').readAsBytesSync(),
+        File('assets/fonts/Roboto-Regular.ttf').readAsBytesSync(),
+      ));
+      expect(latin1.decode(bytes).toLowerCase(), isNot(contains('dan king')));
+      expect(
+        RegExp(r'/Type\s*/Page\b').allMatches(latin1.decode(bytes)).length,
+        greaterThanOrEqualTo(3),
+      );
+      if (Platform.environment['CARDIOGRAPH_PDF_SAMPLES'] == '1') {
+        Directory('output/pdf').createSync(recursive: true);
+        File('output/pdf/ranges.pdf').writeAsBytesSync(bytes);
+      }
+    },
+  );
+
   TestWidgetsFlutterBinding.ensureInitialized();
   test(
     'Quattro periodi civili: settimana a cavallo anno, bisestile, DST, intervallo inclusivo',
@@ -59,8 +100,8 @@ void main() {
         expect(snapshot.rows.single.nocturnal, isTrue);
         expect(snapshot.stats.count, 1);
         expect(snapshot.stats.systolic.mean, 135);
-        expect(Metric.systolic.high(135), isFalse);
-        expect(Metric.systolic.high(135.01), isTrue);
+        expect(Metric.systolic.high(129.99), isFalse);
+        expect(Metric.systolic.high(130), isTrue);
         await repo.delete(rows.single);
         expect(snapshot.rows.length, 1);
         final empty = ReportSnapshot(
@@ -120,7 +161,7 @@ void main() {
         expect(raw.startsWith('%PDF-'), isTrue);
         expect(raw.toLowerCase(), isNot(contains('dan king')));
         final pages = RegExp(r'/Type\s*/Page\b').allMatches(raw).length;
-        expect(pages, n == 2 ? 2 : greaterThan(3));
+        expect(pages, greaterThanOrEqualTo(3));
         if (Platform.environment['CARDIOGRAPH_PDF_SAMPLES'] == '1') {
           final directory = Directory('output/pdf')
             ..createSync(recursive: true);

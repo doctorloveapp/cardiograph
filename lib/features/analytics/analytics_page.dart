@@ -1,3 +1,4 @@
+import 'pressure_pie.dart';
 import 'zoom_chart_card.dart';
 import '../../core/text/italian.dart';
 import 'dart:math' as math;
@@ -15,13 +16,7 @@ import '../measurements/diary.dart';
 import 'analytics_model.dart';
 import '../measurements/measurement.dart';
 
-Color metricColor(Metric metric, num value) => metric.high(value)
-    ? Brand.red
-    : switch (metric) {
-        Metric.systolic => Brand.blue,
-        Metric.diastolic => Brand.ink,
-        Metric.pulse => Brand.navy,
-      };
+Color metricColor(Metric metric, num value) => Color(metric.rangeHex(value));
 
 /// Straight observation-to-observation segments. No synthetic dates or zeroes.
 LineChartData metricChart(
@@ -69,12 +64,14 @@ LineChartData metricChart(
             ? FlDotSquarePainter(
                 size: kind == 0 ? 7 : 5,
                 color: metricColor(metric, spot.y),
-                strokeWidth: 0,
+                strokeWidth: 1,
+                strokeColor: Brand.navy,
               )
             : FlDotCirclePainter(
                 radius: kind == 0 ? 3.5 : 2.5,
                 color: metricColor(metric, spot.y),
-                strokeWidth: 0,
+                strokeWidth: 1,
+                strokeColor: Brand.navy,
               ),
       ),
     );
@@ -82,7 +79,7 @@ LineChartData metricChart(
   final ys = [
     for (final bar in bars)
       for (final spot in bar.spots) spot.y,
-    for (final m in metrics) m.threshold.toDouble(),
+    for (final m in metrics) ...m.guides,
   ];
   final intraday =
       !data.aggregated && observations.first.day == observations.last.day;
@@ -144,16 +141,17 @@ LineChartData metricChart(
     ),
     extraLinesData: ExtraLinesData(
       horizontalLines: [
-        for (final m in metrics)
+        for (final guide
+            in metrics.expand((m) => m.guides).toSet().toList()..sort())
           HorizontalLine(
-            y: m.threshold.toDouble(),
+            y: guide,
             color: Brand.navy.withValues(alpha: .55),
             strokeWidth: 1,
             dashArray: [5, 4],
             label: HorizontalLineLabel(
-              show: true,
+              show: false,
               alignment: Alignment.topRight,
-              labelResolver: (_) => '${m.threshold}',
+              labelResolver: (_) => '$guide',
               style: const TextStyle(fontSize: 11, color: Brand.navy),
             ),
           ),
@@ -198,9 +196,9 @@ LineChartData metricChart(
             children: [
               TextSpan(
                 text: s.y.toStringAsFixed(1),
-                style: TextStyle(color: metricColor(d.$1, s.y)),
+                style: const TextStyle(color: Brand.navy),
               ),
-              TextSpan(text: ' ${d.$1.unit}'),
+              TextSpan(text: ' ${d.$1.unit} · ${d.$1.rangeLabel(s.y)}'),
             ],
           );
         }).toList(),
@@ -454,6 +452,8 @@ class _AnalyticsPageState extends ConsumerState<AnalyticsPage> {
                           ),
                         ),
                       ),
+                    PressurePie(data.rows),
+                    const SizedBox(height: 20),
                     Text(
                       selected.isEmpty
                           ? 'Letture originali'
@@ -524,7 +524,7 @@ class _MetricSummary extends StatelessWidget {
             ])
               Semantics(
                 label:
-                    '${metric.label}, ${entry.$1} ${entry.$2.toStringAsFixed(1)} ${metric.unit}${metric.high(entry.$2) ? ', oltre soglia' : ''}',
+                    '${metric.label}, ${entry.$1} ${entry.$2.toStringAsFixed(1)} ${metric.unit} · ${metric.rangeLabel(entry.$2)}',
                 excludeSemantics: true,
                 child: Text.rich(
                   TextSpan(

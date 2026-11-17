@@ -172,17 +172,21 @@ class MeasurementValue extends StatelessWidget {
   final String label, unit;
   final int? value;
   final bool elevated;
+  final Color? valueColor;
+  final String? category;
   const MeasurementValue({
     super.key,
     required this.label,
     required this.unit,
     this.value,
     this.elevated = false,
+    this.valueColor,
+    this.category,
   });
   @override
   Widget build(BuildContext context) => Semantics(
     label:
-        '$label: ${value ?? "nessun dato"} $unit${elevated ? ", oltre soglia" : ""}',
+        '$label: ${value ?? "nessun dato"} $unit${category == null ? "" : ", $category"}',
     excludeSemantics: true,
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -193,7 +197,7 @@ class MeasurementValue extends StatelessWidget {
           style: TextStyle(
             fontSize: 36,
             fontWeight: FontWeight.w700,
-            color: elevated ? Brand.red : Brand.navy,
+            color: valueColor ?? Brand.navy,
             fontFeatures: const [FontFeature.tabularFigures()],
           ),
         ),

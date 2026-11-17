@@ -2,7 +2,7 @@
   <img src="assets/logo.png" alt="CardioGraph" width="112" />
   <h1>CardioGraph</h1>
   <p>Diario pressorio locale per Android.</p>
-  <a href="pubspec.yaml"><img alt="Versione" src="https://img.shields.io/badge/versione-1.4.0-1261C9?style=flat-square" /></a>
+  <a href="pubspec.yaml"><img alt="Versione" src="https://img.shields.io/badge/versione-1.5.2-1261C9?style=flat-square" /></a>
   <a href="#prerequisiti"><img alt="Android API 26+" src="https://img.shields.io/badge/Android-8.0%2B%20(API%2026%2B)-08D8BF?style=flat-square&logo=android&logoColor=white" /></a>
   <a href="https://flutter.dev/"><img alt="Flutter" src="https://img.shields.io/badge/Flutter-3.38.5-02569B?style=flat-square&logo=flutter" /></a>
   <img alt="Sviluppatore" src="https://img.shields.io/badge/sviluppatore-Dan%20King-142D4E?style=flat-square" />
@@ -13,7 +13,7 @@
 
 ## Il progetto
 
-CardioGraph è un diario Flutter per Android dedicato a pressione e pulsazioni, senza account e senza servizi remoti per il diario; la sola verifica aggiornamenti contatta GitHub. La versione 1.4.0 include archivio cifrato, acquisizione fotografica con revisione, consultazione, report PDF e backup portabili. Il primo avvio parte senza dati dimostrativi. Il manifest release richiede INTERNET per il solo controllo aggiornamenti; le funzioni del diario restano offline; i badge di questa pagina sono risorse esterne del solo README.
+CardioGraph è un diario Flutter per Android dedicato a pressione e pulsazioni, senza account e senza servizi remoti per il diario; la sola verifica aggiornamenti contatta GitHub. La versione 1.5.2 include archivio cifrato, acquisizione fotografica con revisione, consultazione, report PDF e backup portabili. Il primo avvio parte senza dati dimostrativi. Il manifest release richiede INTERNET per il solo controllo aggiornamenti; le funzioni del diario restano offline; i badge di questa pagina sono risorse esterne del solo README.
 
 ## Funzionalità
 
@@ -49,7 +49,7 @@ Il restore sostituisce esplicitamente l’archivio; non effettua merge. Staging 
 | Verde acqua medicale | #08D8BF | Identità del logo |
 | Verde soft / ink | #E5FAF5 / #006D62 | Superfici e testi ad alto contrasto |
 | Blu notte | #142D4E | Testo e valori |
-| Rosso | #B42338 | Singoli valori sopra soglia e CTA di acquisizione |
+| Rosso del marchio | #B42338 | CTA di acquisizione ed errori; distinto dal rosso categorie |
 
 Superfici glass con sfondo calibrato, riflessi e ombre stratificate, footer azzurrato con selezione bianca sempre attivi; numeri tabulari, semantica accessibile e azioni con dimensioni minime 48 dp. Il logo originale è conservato senza deformazioni.
 
@@ -84,7 +84,7 @@ Dalla radice, su questo ambiente Windows:
 & 'C:\Users\hp_wi\Downloads\GEMINI~1\flutter\bin\flutter.bat' pub get --enforce-lockfile
 & 'C:\Users\hp_wi\Downloads\GEMINI~1\flutter\bin\flutter.bat' analyze
 & 'C:\Users\hp_wi\Downloads\GEMINI~1\flutter\bin\flutter.bat' test
-& 'C:\Users\hp_wi\Downloads\GEMINI~1\flutter\bin\flutter.bat' build apk --release --target-platform android-arm64 --obfuscate --split-debug-info=output/symbols/1.4.0+7
+& 'C:\Users\hp_wi\Downloads\GEMINI~1\flutter\bin\flutter.bat' build apk --release --target-platform android-arm64 --obfuscate --split-debug-info=output/symbols/1.5.2+9
 ```
 
 Il percorso breve evita il problema Windows dei native hooks con spazi. Su altre macchine configurare uno SDK compatibile e un percorso locale adeguato; non versionare local.properties.
@@ -93,11 +93,11 @@ Il percorso breve evita il problema Windows dei native hooks con spazi. Su altre
 
 Application ID e namespace: **dev.danking.cardiograph**. La configurazione legge `secrets/android/key.properties`, con `storeFile`, `storePassword`, `keyAlias` e `keyPassword`. Keystore e credenziali restano esclusi da Git. La release usa il certificato Dan King già impiegato negli aggiornamenti; conservare la stessa chiave per mantenere la continuità delle installazioni. Nessun ripiego sulla firma debug.
 
-Versione Android: **1.4.0 (build 7)**. Artefatto finale: **APK arm64 offuscata**, `build/app/outputs/flutter-apk/app-release.apk`. Conservare separatamente i simboli in `output/symbols/1.4.0+7` per `flutter symbolize`; non incorporarli nell’APK. Per verificarlo usare `apksigner verify --verbose --print-certs` degli Android Build Tools.
+Versione Android: **1.5.2 (build 9)**. Artefatto finale: **APK arm64 offuscata**, `build/app/outputs/flutter-apk/app-release.apk`. Conservare separatamente i simboli in `output/symbols/1.5.2+9` per `flutter symbolize`; non incorporarli nell’APK. Per verificarlo usare `apksigner verify --verbose --print-certs` degli Android Build Tools.
 
 ## Verifica e limiti noti
 
-Versione **1.4.0+7**, sola ABI arm64, firma Dan King. Test mirati per zoom 2X, pan sui due assi, scroll esterno fermo, header/reset fissi e selezione della misura dopo trasformazione; test per release/tag/asset/confronto versioni, flag default true, errore offline e nomi file. **83/83 test Flutter superati**, analisi statica pulita e OCR **6/6**; risultati documentati nel piano. Endpoint reale GitHub verificato HTTP 200 con tag CardioGraphVer1.3.1 e asset CardioGraph.Ver1.3.1.apk il 16 novembre 2026.
+Versione **1.5.2+9**, sola ABI arm64, firma Dan King. Test mirati per zoom 2X, pan sui due assi, scroll esterno fermo, header/reset fissi e selezione della misura dopo trasformazione; test per release/tag/asset/confronto versioni, flag default true, errore offline e nomi file. **91/91 test Flutter superati**, analisi statica pulita e OCR **6/6**; risultati documentati nel piano. Endpoint reale GitHub verificato HTTP 200 con tag CardioGraphVer1.3.1 e asset CardioGraph.Ver1.3.1.apk il 16 novembre 2026.
 
 Le installazioni e prove fisiche delle versioni precedenti non sostituiscono il collaudo della nuova versione. Questa consegna è verificata con eventi touch automatici e test locali; nessun archivio reale alterato. Matrice produttori, audit vocale umano e profiling sul dispositivo minimo restano aperti. I benchmark e le prove Doze storici sono registrati in piano_fasi.md; non sono ripetuti per questa release.
 
@@ -117,13 +117,13 @@ Un marcatore persistente blocca la pubblicazione su uno snapshot obsoleto durant
 
 Per aggiornare un’installazione esistente usare `adb install -r build/app/outputs/flutter-apk/app-release.apk`, con lo stesso applicationId e certificato. Aprire l’app dopo l’aggiornamento per eseguire la migrazione e sincronizzare i promemoria. Non disinstallare né cancellare i dati; creare prima un backup portabile. L’installazione pulita è riservata a un emulatore o dispositivo senza dati da conservare.
 
-Conservare privatamente keystore, credenziali e simboli Dart in `output/symbols/1.4.0+7`; archiviare anche il mapping R8 della stessa build. Per un errore dopo il rilascio preferire un aggiornamento correttivo con versionCode superiore e migrazione compatibile. Il downgrade non è una procedura di recupero garantita; il ripristino del diario richiede un backup valido e conferma sostitutiva. Nessun AAB viene prodotto per questa consegna.
+Conservare privatamente keystore, credenziali e simboli Dart in `output/symbols/1.5.2+9`; archiviare anche il mapping R8 della stessa build. Per un errore dopo il rilascio preferire un aggiornamento correttivo con versionCode superiore e migrazione compatibile. Il downgrade non è una procedura di recupero garantita; il ripristino del diario richiede un backup valido e conferma sostitutiva. Nessun AAB viene prodotto per questa consegna.
 
 Il riferimento operativo è [piano_fasi.md](piano_fasi.md), con prove effettive e verifiche ancora aperte.
 
 
 
-## Aggiornamenti e grafici — 1.4.0
+## Aggiornamenti e grafici — 1.5.2
 
 Impostazioni → Aggiornamenti precede Info. Il controllo automatico è **attivo di default**, persistito localmente e disattivabile; avviene una volta per avvio del processo, senza bloccare il diario. GET HTTPS esclusivamente a `https://api.github.com/repos/doctorloveapp/cardiograph/releases/latest`, senza token, cookie o dati sanitari, con timeout 8 secondi, risposta limitata a 512 KiB e redirect disabilitati. GitHub riceve IP, orario e User-Agent generico: si applica anche la sua informativa. La preferenza è locale e non entra nel backup portabile.
 
@@ -133,4 +133,26 @@ Ogni scheda Andamento ha zoom indipendente **2X / 1X** nell’header fisso con t
 
 Nomi file: backup `CardioGraph_DD_MM_AAAA_HH_mm.cardiograph` con data/ora locale di creazione; PDF `CardioGraph_DD_MM_AAAA_DD_MM_AAAA.pdf` con date iniziale/finale del periodo. I provider possono gestire conflitti di nome nel selettore Android.
 
-Per pubblicare questa versione usare tag `CardioGraphVer1.4.0` e asset **CardioGraph.Ver1.4.0.apk**. Il file installabile di build resta app-release.apk; la copia con nome di pubblicazione viene consegnata accanto ad esso. Gli aggiornamenti devono mantenere lo stesso certificato e versionCode crescente.
+Per pubblicare questa versione usare tag `CardioGraphVer1.5.2` e asset **CardioGraph.Ver1.5.2.apk**. Il file installabile di build resta app-release.apk; la copia con nome di pubblicazione viene consegnata accanto ad esso. Gli aggiornamenti devono mantenere lo stesso certificato e versionCode crescente.
+
+## Categorie e distribuzione — 1.5.2
+
+Questi sono range applicativi richiesti per il diario, non una diagnosi. La precedenza è esplicita; non si classificano isolatamente i valori della coppia per decidere il badge pressione. Nell’app i numeri delle misurazioni hanno il colore della propria metrica, senza badge o descrizioni aggiunte. Nel PDF i valori restano scuri come nelle versioni precedenti, con pallini colorati accanto.
+
+| Categoria pressione (precedenza) | Condizione, dopo esclusione dei livelli precedenti | Colore |
+| --- | --- | --- |
+| Grado 3 (Grave) | SYS ≥160 oppure DIA ≥100 | #EF4444 |
+| Grado 2 (Moderata) | SYS ≥140 oppure DIA ≥90 | #F97316 |
+| Grado 1 (Lieve) | SYS ≥130 oppure DIA ≥85 | #F59E0B |
+| Ipotensione | SYS <90 oppure DIA <60 | #3B82F6 |
+| Normale | SYS 90–129 e DIA 60–84 | #10B981 |
+
+Pulsazioni: **<60 blu #3B82F6; 60–99 verde #10B981; ≥100 rosso #EF4444**. Il valore 100 è incluso nella Tachicardia. Le metriche singole nei grafici usano i confini SYS 90/130/140/160 e DIA 60/85/90/100. Per valori medi si classificano i numeri originali non arrotondati.
+
+Le torte in Andamento e PDF usano le categorie delle singole letture originali, non le medie giornaliere. Andamento rispetta tutti i filtri periodo/fascia; le percentuali sono scritte dentro gli spicchi; le categorie a zero non generano fette. Una legenda compatta mostra solo pallini e range SYS/DIA; le spiegazioni complete restano nella Guida breve. L’aggregazione dei grafici a linee mantiene min/max e colori degli estremi; zoom/pan invariati. Il calendario usa la priorità pressoria più alta del giorno (ipertensione, altrimenti ipotensione, altrimenti normale), lasciando ● Mattina / ■ Pomeriggio / ▲ Sera.
+
+Database schema 4 e formato/payload backup 1/3 invariati: nessuna migrazione, classificazioni derivate ogni volta dai valori. Internet resta limitato al solo controllo aggiornamenti GitHub già autorizzato. Nessun nuovo servizio o permesso. PDF con autore vuoto e grafica vettoriale; campioni verificati visivamente.
+
+### Presentazione 1.5.2
+
+Home, Diario e Dettaglio tornano alla presentazione compatta: font dei valori colorati per singola metrica, nessun badge di categoria. Anche le statistiche dell’app usano colori sui numeri senza spiegazioni aggiuntive. Grafici a linee e zoom/pan invariati. Torte app/PDF con percentuali interne e legenda discreta di pallini/range; nessuna spiegazione estesa sotto la torta. Nel PDF i numeri delle letture rimangono scuri con i pallini colorati, come richiesto. Le regole e la precedenza delle categorie restano quelle della 1.5.1, senza modificare DB o backup.

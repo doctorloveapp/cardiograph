@@ -1,9 +1,10 @@
+import '../../core/health_ranges.dart';
 import '../../core/time/measurement_time.dart';
 import '../measurements/measurement.dart';
 
 enum Metric {
-  systolic('Massima', 135, 'mmHg'),
-  diastolic('Minima', 90, 'mmHg'),
+  systolic('Massima', 130, 'mmHg'),
+  diastolic('Minima', 85, 'mmHg'),
   pulse('Pulsazioni', 100, 'bpm');
 
   final String label, unit;
@@ -14,7 +15,22 @@ enum Metric {
     Metric.diastolic => m.diastolic,
     Metric.pulse => m.pulse,
   };
-  bool high(num v) => v > threshold;
+  bool high(num v) => v >= threshold;
+  int rangeHex(num v) => switch (this) {
+    Metric.systolic => systolicRange(v).hex,
+    Metric.diastolic => diastolicRange(v).hex,
+    Metric.pulse => pulseRange(v).hex,
+  };
+  String rangeLabel(num v) => switch (this) {
+    Metric.systolic => systolicRange(v).label,
+    Metric.diastolic => diastolicRange(v).label,
+    Metric.pulse => pulseRange(v).label,
+  };
+  List<double> get guides => switch (this) {
+    Metric.systolic => [90, 130, 140, 160],
+    Metric.diastolic => [60, 85, 90, 100],
+    Metric.pulse => [60, 100],
+  };
 }
 
 class ChartObservation {

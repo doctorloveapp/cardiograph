@@ -1,3 +1,5 @@
+import '../core/health_ranges.dart';
+
 class CalendarDaySummary {
   final String date;
   final int count, morning, afternoon, evening, highCount;
@@ -7,7 +9,9 @@ class CalendarDaySummary {
     this.morning,
     this.afternoon,
     this.evening,
-    this.highCount,
-  );
+    this.highCount, [
+    this.category = PressureRange.normal,
+  ]);
+  final PressureRange category;
   bool get elevated => highCount > 0;
 }

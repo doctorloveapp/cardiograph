@@ -1,3 +1,4 @@
+import '../../core/health_ranges.dart';
 import 'package:flutter/material.dart';
 import '../../app/version.dart';
 import '../../core/design_system/components.dart';
@@ -186,7 +187,13 @@ class GuidePage extends StatelessWidget {
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
               Text(
-                'Il rosso sui singoli numeri indica valori superiori ai riferimenti 135/90 mmHg e 100 bpm; il diario non sostituisce la valutazione del medico.',
+                'I numeri delle misurazioni sono colorati secondo la categoria della singola metrica. Pressione: ipotensione blu, normale verde, Grado 1 giallo, Grado 2 arancione, Grado 3 rosso. Pulsazioni: sotto 60 blu, 60–99 verde, da 100 rosso. Il grafico a torta riassume la pressione nel filtro attivo. Sono categorie configurate per il diario, non una diagnosi medica.',
+              ),
+              SizedBox(height: 12),
+              Text(pressureLegend),
+              Text(pulseLegend),
+              Text(
+                'Nelle legende compatte le coppie indicano SYS/DIA; la classificazione della coppia segue la precedenza Grado 3, Grado 2, Grado 1, Ipotensione, Normale.',
               ),
             ],
           ),

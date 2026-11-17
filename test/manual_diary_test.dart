@@ -123,7 +123,10 @@ void main() {
     expect(rows.single.systolic, 136);
     expect(find.text('Misurazione salvata'), findsOneWidget);
     expect(find.textContaining('Oltre soglia'), findsNothing);
-    expect(t.widget<Text>(find.text('136')).style!.color, Brand.red);
+    expect(
+      t.widget<Text>(find.text('136')).style!.color,
+      const Color(0xfff59e0b),
+    );
   });
   testWidgets('Errore I/O mantiene tutti i campi e non mostra conferma', (
     t,

@@ -1,3 +1,4 @@
+import '../../core/health_ranges.dart';
 import 'dart:math';
 import '../../core/time/measurement_time.dart';
 import '../../core/validation/measurement_validation.dart';
@@ -37,6 +38,8 @@ class Measurement {
   DayBand get band => bandFor(wall);
   String get periodAnchorDate => anchorDate(wall);
   bool get nocturnal => wall.hour < 7;
+  PressureRange get pressureCategory => pressureRange(systolic, diastolic);
+  PulseRange get pulseCategory => pulseRange(pulse);
   bool get elevated =>
       systolicHigh(systolic) || diastolicHigh(diastolic) || pulseHigh(pulse);
   void validate() {

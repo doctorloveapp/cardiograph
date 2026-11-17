@@ -48,9 +48,9 @@ void main() {
     },
   );
   test('Soglie strettamente maggiori, indipendenti', () {
-    expect([134, 135, 136].map(systolicHigh), [false, false, true]);
-    expect([89, 90, 91].map(diastolicHigh), [false, false, true]);
-    expect([99, 100, 101].map(pulseHigh), [false, false, true]);
+    expect([129, 130, 131].map(systolicHigh), [false, true, true]);
+    expect([84, 85, 86].map(diastolicHigh), [false, true, true]);
+    expect([99, 100, 101].map(pulseHigh), [false, true, true]);
     expect(systolicHigh(135.01), isTrue);
   });
   test('Interi positivi obbligatori, senza segni o decimali', () {

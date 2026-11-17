@@ -7,6 +7,6 @@ String? numberError(String? value) {
   return null;
 }
 
-bool systolicHigh(num value) => value > 135;
-bool diastolicHigh(num value) => value > 90;
-bool pulseHigh(num value) => value > 100;
+bool systolicHigh(num value) => value >= 130;
+bool diastolicHigh(num value) => value >= 85;
+bool pulseHigh(num value) => value >= 100;

@@ -1,10 +1,10 @@
+import '../../core/health_ranges.dart';
 import '../../core/text/italian.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/design_system/components.dart';
 import '../../core/time/measurement_time.dart';
-import '../../core/validation/measurement_validation.dart';
 import '../../data/providers.dart';
 import 'measurement.dart';
 
@@ -33,19 +33,22 @@ class ReadingCard extends StatelessWidget {
               label: 'Massima',
               unit: 'mmHg',
               value: reading.systolic,
-              elevated: systolicHigh(reading.systolic),
+              valueColor: Color(systolicRange(reading.systolic).hex),
+              category: systolicRange(reading.systolic).label,
             ),
             MeasurementValue(
               label: 'Minima',
               unit: 'mmHg',
               value: reading.diastolic,
-              elevated: diastolicHigh(reading.diastolic),
+              valueColor: Color(diastolicRange(reading.diastolic).hex),
+              category: diastolicRange(reading.diastolic).label,
             ),
             MeasurementValue(
               label: 'Pulsazioni',
               unit: 'bpm',
               value: reading.pulse,
-              elevated: pulseHigh(reading.pulse),
+              valueColor: Color(pulseRange(reading.pulse).hex),
+              category: pulseRange(reading.pulse).label,
             ),
           ],
         ),
@@ -171,27 +174,25 @@ class _DiaryPageState extends ConsumerState<DiaryPage> {
                           TextSpan(
                             text: stats.systolic.mean!.toStringAsFixed(1),
                             style: TextStyle(
-                              color: systolicHigh(stats.systolic.mean!)
-                                  ? Theme.of(context).colorScheme.error
-                                  : null,
+                              color: Color(
+                                systolicRange(stats.systolic.mean!).hex,
+                              ),
                             ),
                           ),
                           const TextSpan(text: ' / '),
                           TextSpan(
                             text: stats.diastolic.mean!.toStringAsFixed(1),
                             style: TextStyle(
-                              color: diastolicHigh(stats.diastolic.mean!)
-                                  ? Theme.of(context).colorScheme.error
-                                  : null,
+                              color: Color(
+                                diastolicRange(stats.diastolic.mean!).hex,
+                              ),
                             ),
                           ),
                           const TextSpan(text: ' mmHg · '),
                           TextSpan(
                             text: stats.pulse.mean!.toStringAsFixed(1),
                             style: TextStyle(
-                              color: pulseHigh(stats.pulse.mean!)
-                                  ? Theme.of(context).colorScheme.error
-                                  : null,
+                              color: Color(pulseRange(stats.pulse.mean!).hex),
                             ),
                           ),
                           const TextSpan(text: ' bpm'),

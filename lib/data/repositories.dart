@@ -1,3 +1,4 @@
+import '../core/health_ranges.dart';
 import 'dart:async';
 import 'package:drift/drift.dart';
 import '../features/measurements/measurement.dart';
@@ -114,7 +115,11 @@ class MeasurementRepository {
       SUM(CASE WHEN local_time >= '07:00:00' AND local_time < '13:01:00' THEN 1 ELSE 0 END) AS morning,
       SUM(CASE WHEN local_time >= '13:01:00' AND local_time < '19:01:00' THEN 1 ELSE 0 END) AS afternoon,
       SUM(CASE WHEN local_time < '07:00:00' OR local_time >= '19:01:00' THEN 1 ELSE 0 END) AS evening,
-      SUM(CASE WHEN systolic > 135 OR diastolic > 90 OR pulse > 100 THEN 1 ELSE 0 END) AS high_count
+      SUM(CASE WHEN systolic >= 130 OR diastolic >= 85 THEN 1 ELSE 0 END) AS high_count,
+      MAX(CASE WHEN systolic >=160 OR diastolic >=100 THEN 4
+        WHEN systolic >=140 OR diastolic >=90 THEN 3
+        WHEN systolic >=130 OR diastolic >=85 THEN 2
+        WHEN systolic <90 OR diastolic <60 THEN 1 ELSE 0 END) AS range_priority
       FROM measurements WHERE local_date >= ? AND local_date <= ? GROUP BY local_date''',
       variables: sqlVariables(['$month-01', dateKey(end)]),
     ).get();
@@ -127,6 +132,9 @@ class MeasurementRepository {
           r.read('afternoon'),
           r.read('evening'),
           r.read('high_count'),
+          PressureRange.values.firstWhere(
+            (v) => v.priority == r.read<int>('range_priority'),
+          ),
         ),
     };
   }
