@@ -1,7 +1,7 @@
 name: cardiograph
 description: Diario personale della pressione, locale e senza account.
 publish_to: none
-version: 1.5.2+9
+version: 1.5.3+10
 environment:
   sdk: '>=3.10.4 <3.11.0'
   flutter: '>=3.38.5 <3.39.0'

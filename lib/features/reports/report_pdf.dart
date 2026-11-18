@@ -13,6 +13,8 @@ const _ink = PdfColor.fromInt(0xff16334b);
 const _blue = PdfColor.fromInt(0xff1261c9);
 const _green = PdfColor.fromInt(0xff006b5e);
 
+String _axisNumber(num v) => v % 1 == 0 ? '${v.toInt()}' : _number(v);
+
 String _number(num v) =>
     v is int ? '$v' : v.toStringAsFixed(1).replaceAll('.', ',');
 
@@ -324,11 +326,11 @@ pw.Widget _chart(
       for (final k in metrics) k.value(m),
     ...metrics.expand((k) => k.guides).map((v) => v.toInt()),
   ];
-  final minY = (values.reduce(math.min) ~/ 10) * 10 - 10;
-  final maxY = (values.reduce(math.max) ~/ 10 + 2) * 10;
+  final scale = ReportChartScale.fromValues(values);
+  final minY = scale.minimum, maxY = scale.maximum;
   final first = s.rows.first.wall.millisecondsSinceEpoch;
   final last = s.rows.last.wall.millisecondsSinceEpoch;
-  const width = 488.0, height = 100.0;
+  const width = 456.0, height = 110.0, left = 32.0;
   double x(Measurement m) => last == first
       ? width / 2
       : (m.wall.millisecondsSinceEpoch - first) / (last - first) * width;
@@ -343,54 +345,86 @@ pw.Widget _chart(
         size: 10,
       ),
       text(
-        'Scala: $minY–$maxY · Riferimenti: ${metrics.expand((k) => k.guides).toSet().join(' / ')}',
+        'Scala: ${_axisNumber(minY)}–${_axisNumber(maxY)} ${metrics.first.unit}',
         size: 8,
       ),
       pw.SizedBox(height: 5),
       pw.Padding(
         padding: const pw.EdgeInsets.symmetric(horizontal: 4),
-        child: pw.CustomPaint(
-          size: const PdfPoint(width + 8, height + 8),
-          painter: (g, size) {
-            g.saveContext();
-            // All coordinates remain vector paths. Exact observations, straight segments, no invented dates.
-            for (final metric in metrics) {
-              final color = metric == Metric.diastolic ? _green : _blue;
-              for (final reference in metric.guides) {
-                g
-                  ..setStrokeColor(PdfColors.grey500)
-                  ..setLineWidth(.5)
-                  ..setLineDashPattern([3, 3])
-                  ..drawLine(4, y(reference) + 4, width + 4, y(reference) + 4)
-                  ..strokePath()
-                  ..setLineDashPattern();
-              }
-              g
-                ..setStrokeColor(color)
-                ..setLineWidth(.8);
-              for (var i = 1; i < s.rows.length; i++) {
-                g.drawLine(
-                  x(s.rows[i - 1]) + 4,
-                  y(metric.value(s.rows[i - 1])) + 4,
-                  x(s.rows[i]) + 4,
-                  y(metric.value(s.rows[i])) + 4,
-                );
-              }
-              g.strokePath();
-              for (final m in s.rows) {
-                g.setFillColor(
-                  PdfColor.fromInt(metric.rangeHex(metric.value(m))),
-                );
-                if (metric == Metric.diastolic) {
-                  g.drawRect(x(m) + 2, y(metric.value(m)) + 2, 4, 4);
-                } else {
-                  g.drawEllipse(x(m) + 4, y(metric.value(m)) + 4, 2, 2);
+        child: pw.Stack(
+          children: [
+            pw.CustomPaint(
+              size: const PdfPoint(left + width + 8, height + 14),
+              painter: (g, size) {
+                g.saveContext();
+                for (final tick in scale.ticks) {
+                  g
+                    ..setStrokeColor(PdfColors.grey400)
+                    ..setLineWidth(.4)
+                    ..setLineDashPattern([3, 3])
+                    ..drawLine(
+                      left + 4,
+                      y(tick) + 4,
+                      left + width + 4,
+                      y(tick) + 4,
+                    )
+                    ..strokePath()
+                    ..setLineDashPattern();
                 }
-                g.fillPath();
-              }
-            }
-            g.restoreContext();
-          },
+                g
+                  ..setStrokeColor(_ink)
+                  ..setLineWidth(.5)
+                  ..drawLine(left + 4, 4, left + 4, height + 4)
+                  ..strokePath();
+                // All coordinates remain vector paths. Exact observations, straight segments, no invented dates.
+                for (final metric in metrics) {
+                  final color = metric == Metric.diastolic ? _green : _blue;
+                  g
+                    ..setStrokeColor(color)
+                    ..setLineWidth(.8);
+                  for (var i = 1; i < s.rows.length; i++) {
+                    g.drawLine(
+                      left + x(s.rows[i - 1]) + 4,
+                      y(metric.value(s.rows[i - 1])) + 4,
+                      left + x(s.rows[i]) + 4,
+                      y(metric.value(s.rows[i])) + 4,
+                    );
+                  }
+                  g.strokePath();
+                  for (final m in s.rows) {
+                    g.setFillColor(
+                      PdfColor.fromInt(metric.rangeHex(metric.value(m))),
+                    );
+                    if (metric == Metric.diastolic) {
+                      g.drawRect(left + x(m) + 2, y(metric.value(m)) + 2, 4, 4);
+                    } else {
+                      g.drawEllipse(
+                        left + x(m) + 4,
+                        y(metric.value(m)) + 4,
+                        2,
+                        2,
+                      );
+                    }
+                    g.fillPath();
+                  }
+                }
+                g.restoreContext();
+              },
+            ),
+            for (final tick in scale.ticks)
+              pw.Positioned(
+                left: 0,
+                bottom: y(tick),
+                child: pw.SizedBox(
+                  width: left - 3,
+                  height: 8,
+                  child: pw.Align(
+                    alignment: pw.Alignment.centerRight,
+                    child: text(_axisNumber(tick), size: 7),
+                  ),
+                ),
+              ),
+          ],
         ),
       ),
       pw.Row(

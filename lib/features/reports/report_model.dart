@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import '../../core/time/measurement_time.dart';
 import '../measurements/measurement.dart';
 
@@ -63,4 +64,37 @@ class ReportSnapshot {
   MeasurementStats get stats => MeasurementStats(rows);
   bool get showOffsets =>
       rows.map((m) => (m.zone, m.offsetMinutes)).toSet().length > 1;
+}
+
+/// Regular numeric Y-axis ticks, bounded in count and independent for each chart.
+class ReportChartScale {
+  final double minimum, maximum, step;
+  const ReportChartScale(this.minimum, this.maximum, this.step);
+  factory ReportChartScale.fromValues(Iterable<num> original) {
+    final values = original.map((v) => v.toDouble()).toList();
+    if (values.isEmpty) throw ArgumentError('Scala senza valori');
+    final lower = math.max(0, values.reduce(math.min) - 10).toDouble();
+    final upper = (values.reduce(math.max) + 20).toDouble();
+    final raw = (upper - lower) / 7;
+    final power = math.pow(10, (math.log(raw) / math.ln10).floor()).toDouble();
+    final fraction = raw / power;
+    final step =
+        (fraction <= 1
+            ? 1
+            : fraction <= 2
+            ? 2
+            : fraction <= 5
+            ? 5
+            : 10) *
+        power;
+    return ReportChartScale(
+      (lower / step).floor() * step,
+      (upper / step).ceil() * step,
+      step,
+    );
+  }
+  List<double> get ticks => [
+    for (var i = 0; i <= ((maximum - minimum) / step).round(); i++)
+      minimum + i * step,
+  ];
 }

@@ -19,6 +19,44 @@ import 'package:cardiograph/features/measurements/measurement.dart';
 
 void main() {
   test(
+    'Scale PDF: valori regolari leggibili, estremi compresi, unità separate',
+    () {
+      for (final values in [
+        [60, 85, 90, 100, 130, 140, 160],
+        [60, 100],
+        [1, 999],
+        [80, 80],
+      ]) {
+        final scale = ReportChartScale.fromValues(values);
+        expect(
+          scale.minimum,
+          lessThanOrEqualTo(values.reduce((a, b) => a < b ? a : b)),
+        );
+        expect(
+          scale.maximum,
+          greaterThanOrEqualTo(values.reduce((a, b) => a > b ? a : b)),
+        );
+        expect(scale.minimum, greaterThanOrEqualTo(0));
+        expect(scale.ticks.length, inInclusiveRange(3, 10));
+        for (var i = 1; i < scale.ticks.length; i++) {
+          expect(scale.ticks[i] - scale.ticks[i - 1], scale.step);
+        }
+      }
+      final pressure = ReportChartScale.fromValues([
+        60,
+        85,
+        90,
+        100,
+        130,
+        140,
+        160,
+      ]);
+      final pulse = ReportChartScale.fromValues([60, 100]);
+      expect(pressure.ticks, isNot(pulse.ticks));
+      expect(() => ReportChartScale.fromValues([]), throwsArgumentError);
+    },
+  );
+  test(
     'PDF tutte le categorie: torta vettoriale, legenda e autore vuoto',
     () async {
       final rows = [

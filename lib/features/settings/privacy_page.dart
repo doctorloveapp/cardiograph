@@ -26,7 +26,7 @@ class PrivacyPage extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               SelectableText(
-                "CardioGraph è un diario personale offline per Android. Dan King è lo pseudonimo dello sviluppatore e il titolare della firma dell’app. Questa pagina descrive il funzionamento della versione 1.5.2 e i dati gestiti sul dispositivo; non descrive servizi sanitari o piattaforme cloud. Lo sviluppatore non riceve automaticamente il diario e non dispone di un pannello remoto per consultarlo.",
+                "CardioGraph è un diario personale offline per Android. Dan King è lo pseudonimo dello sviluppatore e il titolare della firma dell’app. Questa pagina descrive il funzionamento della versione 1.5.3 e i dati gestiti sul dispositivo; non descrive servizi sanitari o piattaforme cloud. Lo sviluppatore non riceve automaticamente il diario e non dispone di un pannello remoto per consultarlo.",
               ),
             ],
           ),
@@ -202,7 +202,7 @@ class PrivacyPage extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               SelectableText(
-                "Revisione: 16 novembre 2026 · App 1.5.2 (build 9). Le indicazioni descrivono le funzioni implementate e non costituiscono una certificazione di conformità per qualsiasi impiego. Nuovi servizi remoti o finalità richiederebbero una revisione delle informazioni prima della loro introduzione. CardioGraph resta un diario personale e non sostituisce una valutazione medica.",
+                "Revisione: 16 novembre 2026 · App 1.5.3 (build 10). Le indicazioni descrivono le funzioni implementate e non costituiscono una certificazione di conformità per qualsiasi impiego. Nuovi servizi remoti o finalità richiederebbero una revisione delle informazioni prima della loro introduzione. CardioGraph resta un diario personale e non sostituisce una valutazione medica.",
               ),
             ],
           ),
